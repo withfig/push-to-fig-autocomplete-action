@@ -30,7 +30,7 @@
   "dependencies": {
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
-    "@typescript-eslint/parser": "^5.8.1",
+    "@typescript-eslint/parser": "^5.13.0",
     "@withfig/eslint-plugin-fig-linter": "^1.0.2",
     "eslint": "^7.32.0",
     "prettier": "^2.5.1"
