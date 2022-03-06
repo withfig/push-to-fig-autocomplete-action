@@ -3,32 +3,26 @@ import * as github from '@actions/github'
 import { format } from './prettier'
 import { lintString } from './eslint'
 import { randomUUID } from 'crypto'
-
-type Octokit = ReturnType<typeof github.getOctokit>
-
-type Repo = { owner: string; repo: string }
+import { Repo, Octokit, File } from './types'
+import { AUTOCOMPLETE_DEFAULT_BRANCH, AUTOCOMPLETE_REPO } from './constants'
 
 async function rebaseOnCurrentMaster(octokit: Octokit, fork: Repo) {
   const upstreamMaster = await octokit.rest.git.getRef({
-    repo: 'autocomplete',
-    owner: 'withfig',
-    ref: 'heads/master'
+    ...AUTOCOMPLETE_REPO,
+    ref: `heads/${AUTOCOMPLETE_DEFAULT_BRANCH}`
   })
   const newSha = upstreamMaster.data.object.sha
 
   await octokit.rest.git.updateRef({
     ...fork,
-    ref: 'heads/master',
+    ref: `heads/${AUTOCOMPLETE_DEFAULT_BRANCH}`,
     sha: newSha
   })
 }
 
 async function checkOrCreateAutocompleteFork(octokit: Octokit): Promise<Repo> {
   const user = await octokit.rest.users.getAuthenticated()
-  const autocompleteForks = await octokit.rest.repos.listForks({
-    owner: 'withfig',
-    repo: 'autocomplete'
-  })
+  const autocompleteForks = await octokit.rest.repos.listForks(AUTOCOMPLETE_REPO)
 
   for (let i = 0; i < autocompleteForks.data.length; i++) {
     const fork = autocompleteForks.data[i]
@@ -40,17 +34,9 @@ async function checkOrCreateAutocompleteFork(octokit: Octokit): Promise<Repo> {
   }
 
   // TODO: race until the repo is created
-  await octokit.rest.repos.createFork({
-    owner: 'withfig',
-    repo: 'autocomplete'
-  })
+  await octokit.rest.repos.createFork(AUTOCOMPLETE_REPO)
 
   return { owner: user.data.login, repo: 'autocomplete' }
-}
-
-interface File {
-  path: string
-  content: string
 }
 
 async function getDefaultBranch(
@@ -69,7 +55,7 @@ async function createCommitOnNewBranch(
   // create new branch on top of the upstream master
   const masterRef = await octokit.rest.git.getRef({
     ...fork,
-    ref: 'heads/master'
+    ref: `heads/${AUTOCOMPLETE_DEFAULT_BRANCH}`
   })
   const newBranchRef = await octokit.rest.git.createRef({
     ...fork,
@@ -116,14 +102,10 @@ async function createAutocompletePR(
   forkOwner: string,
   branchName: string
 ) {
-  const defaultBranch = await getDefaultBranch(octokit, {
-    repo: 'autocomplete',
-    owner: 'withfig'
-  })
+  const defaultBranch = await getDefaultBranch(octokit, AUTOCOMPLETE_REPO)
   // create a new branch in the fork and create
   await octokit.rest.pulls.create({
-    repo: 'autocomplete',
-    owner: 'withfig',
+    ...AUTOCOMPLETE_REPO,
     title: `feat(${specName}): update spec`,
     head: `${forkOwner}:${branchName}`,
     base: defaultBranch
