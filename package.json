@@ -34,7 +34,7 @@
     "@typescript-eslint/parser": "^5.8.1",
     "@withfig/autocomplete-tools": "^2.5.1",
     "@withfig/eslint-plugin-fig-linter": "^1.0.2",
-    "eslint": "^7.32.0",
+    "eslint": "^8.10.0",
     "eslint-plugin-compat": "^4.0.2",
     "prettier": "^2.5.1"
   },
