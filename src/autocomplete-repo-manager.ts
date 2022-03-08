@@ -1,9 +1,18 @@
+import * as core from '@actions/core'
 import { File, Octokit, OctokitError, Repo } from './types'
 import { isFile } from './utils'
 
 export class AutocompleteRepoManager {
-  declare autocompleteRepo: Repo
-  declare autocompleteDefaultBranch: string
+  private declare autocompleteRepo: Repo
+  private declare autocompleteDefaultBranch: string
+
+  get repo() {
+    return {
+      ...this.autocompleteRepo,
+      defaultBranch: this.autocompleteDefaultBranch
+    }
+  }
+
   constructor(autocompleteRepo: Repo, autocompleteDefaultBranch: string) {
     this.autocompleteRepo = autocompleteRepo
     this.autocompleteDefaultBranch = autocompleteDefaultBranch
@@ -15,6 +24,7 @@ export class AutocompleteRepoManager {
     branchName: string,
     changedFile: File
   ) {
+    core.startGroup('commit')
     // create new branch on top of the upstream master
     const masterRef = await octokit.rest.git.getRef({
       ...fork,
@@ -25,6 +35,8 @@ export class AutocompleteRepoManager {
       ref: `refs/heads/${branchName}`,
       sha: masterRef.data.object.sha
     })
+
+    core.info(`Created a new branch on the fork: refs/heads/${branchName}`)
 
     // create new blob, new tree, commit everything and update PR branch
     const newBlob = await octokit.rest.git.createBlob({
@@ -52,11 +64,16 @@ export class AutocompleteRepoManager {
       parents: [newBranchRef.data.object.sha]
     })
 
+    core.info(`Created new commit: ${newCommit.data.sha}`)
+
     octokit.rest.git.updateRef({
       ...fork,
       ref: `heads/${branchName}`,
       sha: newCommit.data.sha
     })
+
+    core.info('Updated the created branch to point to the new commit')
+    core.endGroup()
   }
 
   async createAutocompleteRepoPR(
@@ -72,14 +89,17 @@ export class AutocompleteRepoManager {
       head: `${forkOwner}:${branchName}`,
       base: this.autocompleteDefaultBranch
     })
+    core.info(
+      `Created target autocomplete repo PR (#${result.data.number}) from branch ${forkOwner}:${branchName}`
+    )
 
     return result.data.number
   }
 
   /**
-   * Rebase an autocomplete for on top of the cyrrent autocomplete default branch
+   * Rebase an autocomplete fork on top of the current autocomplete default branch
    */
-  private async rebaseForkonDefaultBranch(octokit: Octokit, fork: Repo) {
+  private async rebaseForkOnDefaultBranch(octokit: Octokit, fork: Repo) {
     const upstreamMaster = await octokit.rest.git.getRef({
       ...this.autocompleteRepo,
       ref: `heads/${this.autocompleteDefaultBranch}`
@@ -91,6 +111,9 @@ export class AutocompleteRepoManager {
       ref: `heads/${this.autocompleteDefaultBranch}`,
       sha: newSha
     })
+    core.info(
+      `Rebased ${fork} on top of 'heads/${this.autocompleteDefaultBranch}'`
+    )
   }
 
   /**
@@ -98,6 +121,8 @@ export class AutocompleteRepoManager {
    */
   async checkOrCreateFork(octokit: Octokit): Promise<Repo> {
     const user = await octokit.rest.users.getAuthenticated()
+    core.info(`Authenticated user: ${user.data.login}`)
+
     const autocompleteForks = await octokit.rest.repos.listForks(
       this.autocompleteRepo
     )
@@ -105,16 +130,22 @@ export class AutocompleteRepoManager {
     for (let i = 0; i < autocompleteForks.data.length; i++) {
       const fork = autocompleteForks.data[i]
       if (fork.owner.login === user.data.login) {
+        core.info('A fork of the target autocomplete repo already exists')
         const forkData = { owner: fork.owner.login, repo: fork.name }
-        await this.rebaseForkonDefaultBranch(octokit, forkData)
+        await this.rebaseForkOnDefaultBranch(octokit, forkData)
         return forkData
       }
     }
 
     // TODO: race until the repo is created
-    await octokit.rest.repos.createFork(this.autocompleteRepo)
+    const createdFork = await octokit.rest.repos.createFork(
+      this.autocompleteRepo
+    )
+    core.info(
+      `Created fork: ${createdFork.data.owner.login}/${createdFork.data.name}`
+    )
 
-    return { owner: user.data.login, repo: 'autocomplete' }
+    return { owner: user.data.login, repo: createdFork.data.name }
   }
 
   /**

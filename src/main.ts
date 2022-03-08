@@ -28,6 +28,8 @@ async function run() {
       await getRepoDefaultBranch(octokit, repo)
     )
 
+    core.info(`Target autocomplete repo: ${autocompleteRepoManager.repo}`)
+
     // get generated spec, run eslint and prettier on top of it and report eventual errors
     let newSpecContent = await getFormattedSpecContent(
       octokit,
@@ -47,6 +49,7 @@ async function run() {
         })
       }
     }
+    core.info(`Successfully generated new spec.`)
 
     // create autocomplete fork
     const autocompleteFork = await autocompleteRepoManager.checkOrCreateFork(
