@@ -25,7 +25,7 @@ jobs:
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
           autocomplete-spec-name: __integration-tests__/test
-          spec-path: ./src/__integration-tests__/new-test.ts
+          spec-path: src/__integration-tests__/new-test.ts
           integration: commander
           repo-name: update-fig-spec-action
           repo-org: withfig
