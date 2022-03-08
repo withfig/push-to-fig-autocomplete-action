@@ -18,7 +18,7 @@ export class AutocompleteRepoManager {
     this.autocompleteDefaultBranch = autocompleteDefaultBranch
   }
 
-  async createCommitOnNewRepoBranch(
+  async createCommitOnForkNewBranch(
     octokit: Octokit,
     fork: Repo,
     branchName: string,
@@ -30,7 +30,15 @@ export class AutocompleteRepoManager {
       ...fork,
       ref: `heads/${this.autocompleteDefaultBranch}`
     })
-    const newBranchRef = await octokit.rest.git.createRef({
+
+    const lastMainBranchCommit = await octokit.rest.repos.listCommits({
+      ...fork,
+      per_page: 1,
+      page: 1
+    })
+
+    // create new branch
+    await octokit.rest.git.createRef({
       ...fork,
       ref: `refs/heads/${branchName}`,
       sha: masterRef.data.object.sha
@@ -54,14 +62,14 @@ export class AutocompleteRepoManager {
           type: 'blob'
         }
       ],
-      base_tree: newBranchRef.data.object.sha
+      base_tree: lastMainBranchCommit.data[0].commit.tree.sha
     })
 
     const newCommit = await octokit.rest.git.createCommit({
       ...fork,
       message: 'feat: update spec',
       tree: newTree.data.sha,
-      parents: [newBranchRef.data.object.sha]
+      parents: [lastMainBranchCommit.data[0].sha]
     })
 
     core.info(`Created new commit: ${newCommit.data.sha}`)
@@ -112,7 +120,9 @@ export class AutocompleteRepoManager {
       sha: newSha
     })
     core.info(
-      `Rebased ${fork} on top of 'heads/${this.autocompleteDefaultBranch}'`
+      `Rebased ${JSON.stringify(fork)} on top of 'heads/${
+        this.autocompleteDefaultBranch
+      }'`
     )
   }
 

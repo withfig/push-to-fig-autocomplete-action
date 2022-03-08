@@ -3,3 +3,5 @@ lib/
 node_modules/
 jest.config.js
 __integration-tests__
+jest-resolver.js
+webpack.config.js
