@@ -3,8 +3,8 @@ description: 'Use this action to automatically open a new PR to the FIg autocomp
 author: 'Fig'
 inputs:
   token:
-    required: true
-    description: 'A PAT'
+    description: 'GitHub access token'
+    default: ${{ github.token }}
   autocomplete-spec-name:
     required: true
     description: 'The spec name in the autocomplete repo. Do not include extension and do not include src/ at the beginning'
@@ -13,6 +13,12 @@ inputs:
     description: 'The path to the spec in the actual repo'
   integration:
     description: 'The official Fig integration name used to autogenerate the spec'
+  repo-org:
+    description: 'The name of the organization that contains the repo in which to create the PR'
+    default: 'withfig'
+  repo-name: 
+    description: 'The name of the repo in which to create the PR'
+    default: 'autocomplete'
 runs:
   using: 'node16'
   main: 'dist/index.js'
