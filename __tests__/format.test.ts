@@ -6,7 +6,7 @@ const file = `const completionSpec: Fig.CompletionSpec = {name: "foo", descripti
 
 test('Should parse and run the default eslint configuration on a string', async () => {
   const expected = `const completionSpec: Fig.CompletionSpec = {name: "foo", description: 'Single quoted'}`
-  expect(await lintString(file)).toEqual(expected)
+  expect(await lintString(file, 'file.ts')).toEqual(expected)
 })
 
 test('Should parse and run the default prettier configuration on a string', () => {
