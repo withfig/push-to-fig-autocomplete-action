@@ -1,4 +1,4 @@
-import { Linter } from 'eslint'
+import { ESLint, Linter } from 'eslint'
 
 const config: Linter.Config = {
   parser: '@typescript-eslint/parser',
@@ -26,15 +26,23 @@ const config: Linter.Config = {
 const BASE_ERROR_MESSAGE = `The action encountered the following error(s) while linting the generated spec,
 if you are using some official integration report the failure to the Fig team to receive help:\n\n\n`
 
-export function lintString(code: string, name: string): string {
-  const report = new Linter().verifyAndFix(code, config, name)
-  if (report.messages.some(m => m.severity === 2)) {
+export async function lintString(
+  code: string,
+  specPath: string
+): Promise<string> {
+  const eslint = new ESLint({
+    baseConfig: config,
+    fix: true,
+    useEslintrc: false
+  })
+  const [lintResult] = await eslint.lintText(code, { filePath: specPath })
+  if (lintResult.errorCount > lintResult.fixableErrorCount) {
     throw new Error(
       BASE_ERROR_MESSAGE +
-        report.messages
+        lintResult.messages
           .map(m => `${m.ruleId} ${m.line}:${m.column} - ${m.message}`)
           .join('\n')
     )
   }
-  return report.output
+  return lintResult.output || code
 }

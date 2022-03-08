@@ -12,8 +12,7 @@ export async function getRepoDefaultBranch(
 
 export async function getFormattedSpecContent(
   octokit: Octokit,
-  specPath: string,
-  specName: string
+  specPath: string
 ): Promise<string> {
   const specFile = await octokit.rest.repos.getContent({
     ...github.context.repo,
@@ -23,7 +22,7 @@ export async function getFormattedSpecContent(
   if (isFile(specFile.data)) {
     const decodedFile = Buffer.from(specFile.data.content, 'base64').toString()
 
-    const lintedString = lintString(decodedFile, `${specName}.ts`)
+    const lintedString = await lintString(decodedFile, specPath)
     return format(lintedString)
   }
   throw new Error(`spec-path: ${specPath} does not correspond to a valid file`)
