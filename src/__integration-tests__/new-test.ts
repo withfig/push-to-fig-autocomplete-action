@@ -8,3 +8,5 @@ const completionSpec: Fig.completionSpec = {
     name: "remove",
   }],
 }
+
+export default completionSpec

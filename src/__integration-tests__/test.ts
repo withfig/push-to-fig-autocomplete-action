@@ -7,3 +7,5 @@ const completionSpec: Fig.completionSpec = {
     icon: "https://path.com"
   }],
 }
+
+export default completionSpec
