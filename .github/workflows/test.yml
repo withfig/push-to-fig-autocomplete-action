@@ -28,7 +28,7 @@ jobs:
           autocomplete-spec-name: __integration-tests__/test
           spec-path: src/__integration-tests__/new-test.ts
           integration: commander
-          repo-name: update-fig-spec-action
+          repo-name: push-to-fig-autocomplete-action
           repo-org: withfig
       - name: Close Pull Request
         uses: peter-evans/close-pull@v1

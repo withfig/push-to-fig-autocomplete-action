@@ -1,5 +1,5 @@
 {
-  "name": "update-fig-spec-action",
+  "name": "push-to-fig-autocomplete-action",
   "version": "1.0.0-alpha.0",
   "private": true,
   "description": "TypeScript template action",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/withfig/update-fig-spec-action.git"
+    "url": "git+https://github.com/withfig/push-to-fig-autocomplete-action.git"
   },
   "keywords": [
     "fig",
