@@ -77,7 +77,8 @@ export class AutocompleteRepoManager {
     octokit.rest.git.updateRef({
       ...fork,
       ref: `heads/${branchName}`,
-      sha: newCommit.data.sha
+      sha: newCommit.data.sha,
+      force: true
     })
 
     core.info('Updated the created branch to point to the new commit')
