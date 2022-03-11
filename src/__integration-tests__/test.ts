@@ -1,11 +1,15 @@
 const completionSpec: Fig.completionSpec = {
-  name: "fig",
-  description: "Some description",
-  subcommands: [{
-    name: "update",
-    description: "Some description",
-    icon: "https://path.com"
-  }],
+  name: 'fig',
+  description: 'Updated description',
+  subcommands: [
+    {
+      name: 'update',
+      description: 'Updated description',
+      icon: 'https://path.com',
+    },
+    {
+      name: 'remove',
+    },
+  ],
 }
-
 export default completionSpec
