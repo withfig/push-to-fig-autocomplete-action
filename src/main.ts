@@ -38,16 +38,14 @@ async function run() {
     let newSpecContent = await getFormattedSpecContent(octokit, specPath)
 
     // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
-    if (integration) {
-      const autocompleteSpec = await autocompleteRepoManager.getSpec(
-        octokit,
-        specPath
-      )
-      if (autocompleteSpec) {
-        newSpecContent = mergeSpecs(autocompleteSpec, newSpecContent, {
-          preset: integration
-        })
-      }
+    const autocompleteSpec = await autocompleteRepoManager.getSpec(
+      octokit,
+      specPath
+    )
+    if (autocompleteSpec) {
+      newSpecContent = mergeSpecs(autocompleteSpec, newSpecContent, {
+        ...(integration && { preset: integration })
+      })
     }
     core.info(`Successfully generated new spec`)
 
