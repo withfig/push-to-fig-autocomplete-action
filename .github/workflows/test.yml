@@ -17,6 +17,7 @@ jobs:
       - run: |
           npm run all
   test: # make sure the action works on a clean machine without building
+    if: startsWith(github.head_ref, 'auto-update') == false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +34,7 @@ jobs:
       - name: Close Pull Request
         uses: peter-evans/close-pull@v1
         with:
+          token: ${{ secrets.FIG_BOT_TOKEN }}
           pull-request-number: ${{ steps.capr.outputs.pr-number }}
           comment: 'Closing created PR'
           delete-branch: true
