@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-node@v2
       - name: Generate the spec
         run:
-          ## Execute commands to generate the spec through some official or thrid party integration
+          ## Execute commands to generate the spec through some official or third party integration
       - name: Lint the generated spec
         run: |
           echo '{"extends":"@fig/autocomplete"}' > .tmp-eslintrc
