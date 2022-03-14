@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { File, Octokit, OctokitError, Repo } from './types'
-import { isFile } from './utils'
+import { isFile, timeout } from './utils'
 
 export class AutocompleteRepoManager {
   private declare autocompleteRepo: Repo
@@ -155,6 +155,7 @@ export class AutocompleteRepoManager {
     const createdFork = await octokit.rest.repos.createFork(
       this.autocompleteRepo
     )
+    await timeout(15_000) // wait 15 seconds to let github create the new repo (it may take longer and require the action to be rerun)
     core.info(
       `Created fork: ${createdFork.data.owner.login}/${createdFork.data.name}`
     )
