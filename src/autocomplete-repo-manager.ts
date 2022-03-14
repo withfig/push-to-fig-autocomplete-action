@@ -91,12 +91,16 @@ export class AutocompleteRepoManager {
     forkOwner: string,
     branchName: string
   ) {
+    const prBody =
+      core.getInput('pr-body') ||
+      'PR generated automatically from push-to-fig-autocomplete-action.'
     // create a new branch in the fork and create
     const result = await octokit.rest.pulls.create({
       ...this.autocompleteRepo,
       title: `feat(${specName}): update spec`,
       head: `${forkOwner}:${branchName}`,
-      base: this.autocompleteDefaultBranch
+      base: this.autocompleteDefaultBranch,
+      body: prBody
     })
     core.info(
       `Created target autocomplete repo PR (#${result.data.number}) from branch ${forkOwner}:${branchName}`
@@ -148,7 +152,6 @@ export class AutocompleteRepoManager {
       }
     }
 
-    // TODO: race until the repo is created
     const createdFork = await octokit.rest.repos.createFork(
       this.autocompleteRepo
     )

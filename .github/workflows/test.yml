@@ -32,6 +32,7 @@ jobs:
           integration: commander
           repo-name: push-to-fig-autocomplete-action
           repo-org: withfig
+          pr-body: 'Integration test'
       - name: Close Pull Request
         uses: peter-evans/close-pull@v1
         with:
