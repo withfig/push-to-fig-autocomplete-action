@@ -33,6 +33,7 @@ jobs:
 
       - name: Rebuild the dist/ directory
         run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
           npm run package
 
       - name: Compare the expected and actual dist/ directories

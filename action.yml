@@ -1,5 +1,5 @@
 name: 'Update Fig Autocomplete spec'
-description: 'Use this action to automatically open a new PR to the FIg autocomplete repo each time a new version of your CLI tool is released'
+description: 'Action to automatically open a new PR to the withfig/autocomplete repo'
 author: 'Fig'
 inputs:
   token:

@@ -45,7 +45,7 @@ jobs:
   - if the spec relative path in the autocomplete repo is `src/npm.ts`, then `autocomplete-spec-name` is `npm`
   - if the spec relative path in the autocomplete repo is `src/@withfig/autocomplete-tools.ts`, then `autocomplete-spec-name` is `@withfig/autocomplete-tools`
 - `spec-path` (required): the path of the generated spec in the current repo
-- `integration`: the name of the official Fig integration used [See](https://fig.io/docs/guides/autocomplete-for-teams)
+- `integration`: the name of the official Fig integration used [See](https://fig.io/docs/guides/autocomplete-for-teams). Supported values: `"commander" | "oclif" | "cobra" | "clap" | "swift-argument-parser"`
 
 We also provide support for third party autocomplete repos via the following inputs:
 - `repo-org`: name of the organization/user that stores the third party autocomplete repository (default: `withfig`)
