@@ -48,7 +48,8 @@ export async function getMergedSpecContent(oldSpec: string, newSpec: string) {
 
   core.info('Started running merge tool...')
   const mergedSpec = mergeSpecs(oldSpec, newSpec, {
-    ...(integration && { preset: integration })
+    ...(integration && { preset: integration }),
+    prettifyOutput: false
   })
   core.info('Finished running merge tool')
   const tmpFileName = `${randomUUID()}.ts`
@@ -60,8 +61,12 @@ export async function getMergedSpecContent(oldSpec: string, newSpec: string) {
   await runEslintOnPath(tmpFileName)
   core.info(`Finished running eslint on merged spec file`)
 
+  const formattedFile = format(
+    await readFile(tmpFileName, { encoding: 'utf8' })
+  )
+  core.info(`Finished running prettier on merged spec`)
   core.endGroup()
-  return await readFile(tmpFileName, { encoding: 'utf8' })
+  return formattedFile
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
