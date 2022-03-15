@@ -43,15 +43,12 @@ async function run() {
       `src/${autocompleteSpecName}.ts`
     )
     if (autocompleteSpec) {
-      core.startGroup('Run merge tool')
-      core.info(`Old spec: ${autocompleteSpec}`)
-      core.info(`New spec: ${newSpecContent}`)
-      core.info(`Settings: ${JSON.stringify({ preset: integration })}`)
+      core.info('Started running merge tool...')
       newSpecContent = mergeSpecs(autocompleteSpec, newSpecContent, {
         ...(integration && { preset: integration })
       })
-      core.info(`Updated spec: ${newSpecContent}`)
-      core.endGroup()
+      // TODO: once the merge tool has finished write the spec to the filesystem and run eslint on it
+      core.info('Finished running merge tool')
     }
 
     // create autocomplete fork

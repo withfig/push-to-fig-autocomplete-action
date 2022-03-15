@@ -22,13 +22,8 @@ jobs:
       - name: Generate the spec
         run:
           ## Execute commands to generate the spec through some official or third party integration
-      - name: Lint the generated spec
-        run: |
-          echo '{"extends":"@fig/autocomplete"}' > .tmp-eslintrc
-          npm i @fig/eslint-config-autocomplete 
-          npx eslint@8 --config .tmp-eslintrc --fix path/to/generated-spec.ts
-      # Create the autocomplete PR using this action
       - name: Create Autocomplete PR
+          ## Create the autocomplete PR using this action
         uses: withfig/publish-to-fig-autocomplete@v1
         with:
           token: ${{ secrets.YOUR_PAT_HERE }}
