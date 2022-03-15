@@ -1,7 +1,11 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { PresetName, merge as mergeSpecs } from '@fig/autocomplete-merge'
-import { getFormattedSpecContent, getRepoDefaultBranch, timeout } from './utils'
+import {
+  getFormattedSpecContent,
+  getMergedSpecContent,
+  getRepoDefaultBranch,
+  timeout
+} from './utils'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
 import { Repo } from './types'
 import { randomUUID } from 'crypto'
@@ -13,7 +17,6 @@ async function run() {
       required: true
     })
     const specPath = core.getInput('spec-path', { required: true })
-    const integration = core.getInput('integration') as PresetName
     const repoOrg = core.getInput('repo-org')
     const repoName = core.getInput('repo-name')
 
@@ -38,17 +41,15 @@ async function run() {
     let newSpecContent = await getFormattedSpecContent(specPath)
 
     // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
-    const autocompleteSpec = await autocompleteRepoManager.getSpec(
+    const autocompleteSpecContent = await autocompleteRepoManager.getSpec(
       octokit,
       `src/${autocompleteSpecName}.ts`
     )
-    if (autocompleteSpec) {
-      core.info('Started running merge tool...')
-      newSpecContent = mergeSpecs(autocompleteSpec, newSpecContent, {
-        ...(integration && { preset: integration })
-      })
-      // TODO: once the merge tool has finished write the spec to the filesystem and run eslint on it
-      core.info('Finished running merge tool')
+    if (autocompleteSpecContent) {
+      newSpecContent = await getMergedSpecContent(
+        autocompleteSpecContent,
+        newSpecContent
+      )
     }
 
     // create autocomplete fork
