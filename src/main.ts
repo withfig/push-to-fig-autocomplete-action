@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {
-  getFormattedSpecContent,
   getMergedSpecContent,
   getRepoDefaultBranch,
+  getSpecFileContent,
   timeout
 } from './utils'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
@@ -38,7 +38,7 @@ async function run() {
     )
 
     // get generated spec, run eslint and prettier on top of it and report eventual errors
-    let newSpecContent = await getFormattedSpecContent(specPath)
+    let newSpecContent = await getSpecFileContent(specPath)
 
     // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
     const autocompleteSpecContent = await autocompleteRepoManager.getSpec(
