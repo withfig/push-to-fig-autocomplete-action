@@ -30,6 +30,7 @@
   "author": "Federico Ciardi <fed.ciardi@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@actions/artifact": "^1.0.0",
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
     "@fig/autocomplete-merge": "^1.1.0",

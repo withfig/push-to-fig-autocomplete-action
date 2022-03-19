@@ -6,6 +6,7 @@ import {
   getSpecFileContent,
   timeout
 } from './utils'
+import { uploadPathArtifact, uploadStringArtifact } from './artifact'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
 import { Repo } from './types'
 import { randomUUID } from 'crypto'
@@ -39,17 +40,19 @@ async function run() {
 
     // get generated spec, run eslint and prettier on top of it and report eventual errors
     let newSpecContent = await getSpecFileContent(specPath)
-
+    await uploadPathArtifact('new-spec.ts', specPath)
     // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
     const autocompleteSpecContent = await autocompleteRepoManager.getSpec(
       octokit,
       `src/${autocompleteSpecName}.ts`
     )
     if (autocompleteSpecContent) {
+      await uploadStringArtifact('old-spec.ts', autocompleteSpecContent)
       newSpecContent = await getMergedSpecContent(
         autocompleteSpecContent,
         newSpecContent
       )
+      await uploadStringArtifact('merged-spec.ts', newSpecContent)
     }
 
     // create autocomplete fork
