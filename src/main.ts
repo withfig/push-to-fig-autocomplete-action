@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
+import * as path from 'path'
 import {
   getMergedSpecContent,
   getRepoDefaultBranch,
@@ -40,6 +41,8 @@ async function run() {
 
     // get generated spec, run eslint and prettier on top of it and report eventual errors
     let newSpecContent = await getSpecFileContent(specPath)
+    core.info(`Spec absolute path: ${path.resolve('.', specPath)}`)
+
     await uploadPathArtifact('new-spec.ts', specPath)
     // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
     const autocompleteSpecContent = await autocompleteRepoManager.getSpec(
