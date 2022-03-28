@@ -16,7 +16,7 @@ jobs:
           npm install
           export NODE_OPTIONS="--max_old_space_size=4096"
           npm run all
-  test: # make sure the action works on a clean machine without building
+  test-simple-spec: # make sure the action works on a clean machine without building
     if: startsWith(github.head_ref, 'auto-update') == false
     runs-on: ubuntu-latest
     steps:
@@ -26,12 +26,38 @@ jobs:
         uses: ./
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
-          autocomplete-spec-name: __integration-tests__/test
-          spec-path: src/__integration-tests__/new-test.ts
+          autocomplete-spec-name: __integration-tests__/simple-spec/cli
+          spec-path: src/__integration-tests__/simple-spec/new-cli.ts
           integration: commander
           repo-name: push-to-fig-autocomplete-action
           repo-org: withfig
-          pr-body: 'Integration test'
+          pr-body: 'Integration test (simple-spec)'
+          diff-based-versioning: false
+      - name: Close Pull Request
+        uses: peter-evans/close-pull@v2
+        with:
+          token: ${{ secrets.FIG_BOT_TOKEN }}
+          pull-request-number: ${{ steps.capr.outputs.pr-number }}
+          comment: 'Closing created PR'
+          delete-branch: true
+
+  test-diff-based-versioning:
+    if: startsWith(github.head_ref, 'auto-update') == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: 'Create Autocomplete PR'
+        id: capr
+        uses: ./
+        with:
+          token: ${{ secrets.FIG_BOT_TOKEN }}
+          autocomplete-spec-name: __integration-tests__/diff-based-versioning/cli
+          spec-path: src/__integration-tests__/diff-based-versioning/new-cli.ts
+          integration: commander
+          repo-name: push-to-fig-autocomplete-action
+          repo-org: withfig
+          pr-body: 'Integration test (diff-based-versioning)'
+          diff-based-versioning: true
       - name: Close Pull Request
         uses: peter-evans/close-pull@v2
         with:
