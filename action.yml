@@ -15,6 +15,9 @@ inputs:
     description: 'The official Fig integration name used to autogenerate the spec'
   pr-body:
     description: 'The created PR description'
+  diff-based-versioning:
+    description: 'Use new diff-based versioning'
+    default: true
   repo-org:
     description: 'The name of the organization that contains the repo in which to create the PR'
     default: 'withfig'

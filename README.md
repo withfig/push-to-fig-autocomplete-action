@@ -35,7 +35,7 @@ jobs:
 
 ### Supported Inputs
 
-- `token` (required): a GitHub personal access token with repo scope
+- `token`: a GitHub personal access token with repo scope (default: `GITHUB_TOKEN`)
 - `autocomplete-spec-name` (required): the name of the spec in the autocomplete repo in the form `[scope/]name` where name is the spec filename in the autocomplete repo. Examples:
   - if the spec relative path in the autocomplete repo is `src/npm.ts`, then `autocomplete-spec-name` is `npm`
   - if the spec relative path in the autocomplete repo is `src/@withfig/autocomplete-tools.ts`, then `autocomplete-spec-name` is `@withfig/autocomplete-tools`
@@ -46,5 +46,6 @@ jobs:
 We also provide support for third party autocomplete repos via the following inputs:
 - `repo-org`: name of the organization/user that stores the third party autocomplete repository (default: `withfig`)
 - `repo-name`: name of the third party autocomplete repository (default: `autocomplete`)
+- `diff-based-versioning`: use new diff-based versioning (default: true)
 
 > NOTE: third party autocomplete repos must be structured as the official autocomplete one. Run `npx @withfig/autocomplete-tools@latest init` to generate one.
