@@ -33,7 +33,7 @@ jobs:
           repo-org: withfig
           pr-body: 'Integration test'
       - name: Close Pull Request
-        uses: peter-evans/close-pull@v1
+        uses: peter-evans/close-pull@v2
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
           pull-request-number: ${{ steps.capr.outputs.pr-number }}
