@@ -17,7 +17,7 @@ inputs:
     description: 'The created PR description'
   diff-based-versioning:
     description: 'Use new diff-based versioning'
-    default: true
+    default: false
   new-spec-version:
     description: 'The new spec version (required and only used when diff-based-versioning is true)'
   repo-org:

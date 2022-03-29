@@ -1,23 +1,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as path from 'path'
-import {
-  execAsync,
-  getMergedSpecContent,
-  getRepoDefaultBranch,
-  getSpecFileContent,
-  lintAndFormatSpec,
-  timeout
-} from './utils'
-import {
-  uploadFilePathArtifact,
-  uploadFolderPathArtifact,
-  uploadStringArtifact
-} from './artifact'
+import { execAsync, mergeSpecs, timeout } from './utils'
+import { uploadFilepathArtifact, uploadFolderPathArtifact } from './artifact'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
 import { Repo } from './types'
+import { TMP_FOLDER } from './constants'
+import { getDefaultBranch } from './git-utils'
+import { lintAndFormatSpec } from './lint-format'
 import { randomUUID } from 'crypto'
-import { writeFile } from 'fs/promises'
 
 async function run() {
   try {
@@ -25,10 +16,11 @@ async function run() {
     const autocompleteSpecName = core.getInput('autocomplete-spec-name', {
       required: true
     })
-    const specPath = core.getInput('spec-path', { required: true })
+    const newSpecPath = core.getInput('spec-path', { required: true })
     const repoOrg = core.getInput('repo-org')
     const repoName = core.getInput('repo-name')
-    const diffBasedVersioning = core.getBooleanInput('diff-based-versioning')
+    const diffBasedVersioning =
+      core.getBooleanInput('diff-based-versioning') ?? false
 
     const octokit = github.getOctokit(token)
 
@@ -38,7 +30,7 @@ async function run() {
     }
     const autocompleteRepoManager = new AutocompleteRepoManager(
       repo,
-      await getRepoDefaultBranch(octokit, repo)
+      await getDefaultBranch(octokit, repo)
     )
 
     core.info(
@@ -49,28 +41,29 @@ async function run() {
 
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for spec-folder.
     let localSpecFileOrFolder: string
+    // run eslint and prettier on top of the generated spec and report eventual errors
+    await lintAndFormatSpec(newSpecPath)
+    await uploadFilepathArtifact('new-spec.ts', newSpecPath)
 
     if (!diffBasedVersioning) {
-      // get generated spec, run eslint and prettier on top of it and report eventual errors
-      let newSpecContent = await getSpecFileContent(specPath)
-
-      await uploadFilePathArtifact('new-spec.ts', specPath)
       // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
-      const autocompleteSpecContent = await autocompleteRepoManager.getSpecFile(
-        octokit,
-        autocompleteSpecName
-      )
-      if (autocompleteSpecContent) {
-        await uploadStringArtifact('old-spec.ts', autocompleteSpecContent)
-        newSpecContent = await getMergedSpecContent(
-          autocompleteSpecContent,
-          newSpecContent
+      const oldSpecPath = path.join(TMP_FOLDER, 'old-spec.ts')
+      const successfullyClonedSpecFile =
+        await autocompleteRepoManager.cloneFile(
+          octokit,
+          `src/${autocompleteSpecName}.ts`,
+          oldSpecPath
         )
-        await uploadStringArtifact('merged-spec.ts', newSpecContent)
+      await uploadFilepathArtifact('old-spec.ts', oldSpecPath)
+
+      const mergedSpecPath = path.join(TMP_FOLDER, 'merged-spec.ts')
+      if (successfullyClonedSpecFile) {
+        await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath)
+        await uploadFilepathArtifact('merged-spec.ts', mergedSpecPath)
+        localSpecFileOrFolder = mergedSpecPath
+      } else {
+        localSpecFileOrFolder = newSpecPath
       }
-      const mergedPath = `${randomUUID()}.ts`
-      await writeFile(mergedPath, newSpecContent, { encoding: 'utf8' })
-      localSpecFileOrFolder = mergedPath
     } else {
       const newSpecVersion = core.getInput('new-spec-version')
       if (!newSpecVersion) {
@@ -79,14 +72,11 @@ async function run() {
         )
       }
 
-      await lintAndFormatSpec(specPath)
-      await uploadFilePathArtifact('new-spec.ts', specPath)
-
-      const localSpecFolder = randomUUID()
+      const localSpecFolder = path.join(TMP_FOLDER, autocompleteSpecName)
       const successfullyClonedSpecFolder =
         await autocompleteRepoManager.cloneSpecFolder(
           octokit,
-          autocompleteSpecName,
+          `src/${autocompleteSpecName}`,
           localSpecFolder
         )
 
@@ -95,14 +85,14 @@ async function run() {
       } else {
         // spec-folder does not exist in autocomplete repo so we create a new one locally and then upload to the autocomplete repo
         await execAsync(
-          `mkdir ${localSpecFolder} && cd ${localSpecFolder} && npx @withfig/autocomplete-tools@latest version init-spec ${autocompleteSpecName}`
+          `mkdir -p ${localSpecFolder} && cd ${localSpecFolder} && npx @withfig/autocomplete-tools@latest version init-spec ${autocompleteSpecName}`
         )
       }
       await execAsync(
-        `cd ${localSpecFolder} && npx @withfig/autocomplete-tools@latest version add-diff ${autocompleteSpecName} ../${specPath} ${newSpecVersion}`
+        `cd ${localSpecFolder} && npx @withfig/autocomplete-tools@latest version add-diff ${autocompleteSpecName} ../${newSpecPath} ${newSpecVersion}`
       )
 
-      localSpecFileOrFolder = path.join(localSpecFolder, autocompleteSpecName)
+      localSpecFileOrFolder = localSpecFolder
     }
 
     // create autocomplete fork
@@ -119,8 +109,8 @@ async function run() {
       localSpecFileOrFolder
     )
 
-    // skip 100ms because github returns a validation error otherwise (commit is sync)
-    await timeout(100)
+    // skip 500ms because github returns a validation error otherwise (commit is sync)
+    await timeout(500)
     // create a PR from the branch with changes
     const createdPRNumber =
       await autocompleteRepoManager.createAutocompleteRepoPR(

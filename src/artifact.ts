@@ -1,17 +1,10 @@
 import * as artifact from '@actions/artifact'
 import * as path from 'path'
-import { readdir, writeFile } from 'fs/promises'
-import { randomUUID } from 'crypto'
+import { readdir } from 'fs/promises'
 
 const client = artifact.create()
 
-export async function uploadStringArtifact(name: string, content: string) {
-  const tempFileName = `${randomUUID()}.ts`
-  await writeFile(tempFileName, content, { encoding: 'utf8' })
-  await client.uploadArtifact(name, [tempFileName], '.')
-}
-
-export async function uploadFilePathArtifact(name: string, filePath: string) {
+export async function uploadFilepathArtifact(name: string, filePath: string) {
   await client.uploadArtifact(name, [filePath], '.')
 }
 
