@@ -1,12 +1,3 @@
-import { generator } from './generators'
-
-const completionSpec: Fig.completionSpec = {
-  name: "fig",
-  description: "Description",
-  subcommands: [{
-    name: "remove",
-    args: { generators: [generator] }
-  }],
-}
-
-export default completionSpec
+import { createVersionedSpec } from '@fig/autocomplete-helpers'
+const versionFiles = ['1.0.0']
+export default createVersionedSpec('cli', versionFiles)
