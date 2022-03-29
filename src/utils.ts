@@ -82,6 +82,7 @@ export async function lintAndFormatSpec(
 
   core.info(`Started running prettier on spec...`)
   const formattedFile = format(await readFile(fileName, { encoding: 'utf8' }))
+  await writeFile(fileName, formattedFile, { encoding: 'utf8' })
   core.info(`Finished running prettier on spec`)
   return formattedFile
 }
