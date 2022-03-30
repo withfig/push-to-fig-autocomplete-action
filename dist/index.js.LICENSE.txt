@@ -1,32 +1,4 @@
 /*!
-	 * Determine if an object is a Buffer
-	 *
-	 * @author   Feross Aboukhadijeh <https://feross.org>
-	 * @license  MIT
-	 */
-
-/*!
-	 * is-extglob <https://github.com/jonschlinkert/is-extglob>
-	 *
-	 * Copyright (c) 2014-2016, Jon Schlinkert.
-	 * Licensed under the MIT License.
-	 */
-
-/*!
-	 * is-glob <https://github.com/jonschlinkert/is-glob>
-	 *
-	 * Copyright (c) 2014-2017, Jon Schlinkert.
-	 * Released under the MIT License.
-	 */
-
-/*!
-	 * repeat-string <https://github.com/jonschlinkert/repeat-string>
-	 *
-	 * Copyright (c) 2014-2015, Jon Schlinkert.
-	 * Licensed under the MIT License.
-	 */
-
-/*!
  * Tmp
  *
  * Copyright (c) 2011-2017 KARASZI Istvan <github@spam.raszi.hu>
@@ -109,43 +81,3 @@ and limitations under the License.
 /*! queue-microtask. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
 /*! run-parallel. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
-
-/**
-	   * @license
-	   * Copyright Google Inc. All Rights Reserved.
-	   *
-	   * Use of this source code is governed by an MIT-style license that can be
-	   * found in the LICENSE file at https://angular.io/license
-	   */
-
-/**
-	 * @license
-	 * Copyright Google Inc. All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */
-
-/**
-	 * @license
-	 * Copyright Google LLC All Rights Reserved.
-	 *
-	 * Use of this source code is governed by an MIT-style license that can be
-	 * found in the LICENSE file at https://angular.io/license
-	 */
-
-/**
-   * @license
-   * Copyright Google Inc. All Rights Reserved.
-   *
-   * Use of this source code is governed by an MIT-style license that can be
-   * found in the LICENSE file at https://angular.io/license
-   */
-
-/**
- * @license
- * Copyright Google Inc. All Rights Reserved.
- *
- * Use of this source code is governed by an MIT-style license that can be
- * found in the LICENSE file at https://angular.io/license
- */

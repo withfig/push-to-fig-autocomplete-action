@@ -1,40 +1,28 @@
 import * as core from '@actions/core'
-import * as github from '@actions/github'
-import { File, Octokit } from './types'
-import { PresetName, merge as mergeSpecs } from '@fig/autocomplete-merge'
+import { PresetName, merge } from '@fig/autocomplete-merge'
 import { readFile, writeFile } from 'fs/promises'
+import { File } from './types'
 import { exec } from 'child_process'
-import { existsSync } from 'fs'
-import { format } from './format'
-import { randomUUID } from 'crypto'
-import { runEslintOnPath } from './lint'
+import { lintAndFormatSpec } from './lint-format'
 
-export async function getRepoDefaultBranch(
-  octokit: Octokit,
-  repo: typeof github.context.repo
+export async function mergeSpecs(
+  oldSpecFilepath: string,
+  newSpecFilepath: string,
+  mergedSpecFilepath: string
 ) {
-  return (await octokit.rest.repos.get(repo)).data.default_branch
-}
-
-export async function getSpecFileContent(specPath: string): Promise<string> {
-  core.startGroup('Linting and formatting the generated spec')
-  const lintedFormattedSpec = await lintAndFormatSpec(specPath)
-  core.endGroup()
-  return lintedFormattedSpec
-}
-
-export async function getMergedSpecContent(oldSpec: string, newSpec: string) {
   const integration = core.getInput('integration') as PresetName
   core.startGroup('Merge specs')
 
   core.info('Started running merge tool...')
-  const mergedSpec = mergeSpecs(oldSpec, newSpec, {
+  const oldSpecContent = await readFile(oldSpecFilepath, { encoding: 'utf8' })
+  const newSpecContent = await readFile(newSpecFilepath, { encoding: 'utf8' })
+  const mergedSpecContent = merge(oldSpecContent, newSpecContent, {
     ...(integration && { preset: integration }),
     prettifyOutput: false
   })
-  const lintedFormattedSpec = await lintAndFormatSpec(mergedSpec)
+  await writeFile(mergedSpecFilepath, mergedSpecContent, { encoding: 'utf8' })
+  await lintAndFormatSpec(mergedSpecFilepath)
   core.endGroup()
-  return lintedFormattedSpec
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -61,27 +49,4 @@ export async function execAsync(
       resolve({ stdout: trimmed(stdout), stderr: trimmed(stderr) })
     })
   })
-}
-
-export async function lintAndFormatSpec(
-  contentOrPath: string
-): Promise<string> {
-  let fileName: string
-  if (existsSync(contentOrPath)) {
-    fileName = contentOrPath
-  } else {
-    fileName = `${randomUUID()}.ts`
-    core.info(`Started writing spec to '${fileName}'...`)
-    await writeFile(fileName, contentOrPath, { encoding: 'utf8' })
-    core.info(`Finished writing spec`)
-  }
-
-  core.info(`Started running eslint on spec file...`)
-  await runEslintOnPath(fileName)
-  core.info(`Finished running eslint on spec file`)
-
-  core.info(`Started running prettier on spec...`)
-  const formattedFile = format(await readFile(fileName, { encoding: 'utf8' }))
-  core.info(`Finished running prettier on spec`)
-  return formattedFile
 }

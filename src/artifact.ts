@@ -1,15 +1,29 @@
 import * as artifact from '@actions/artifact'
-import { randomUUID } from 'crypto'
-import { writeFile } from 'fs/promises'
+import * as path from 'path'
+import { readdir } from 'fs/promises'
 
 const client = artifact.create()
 
-export async function uploadStringArtifact(name: string, content: string) {
-  const tempFileName = `${randomUUID()}.ts`
-  await writeFile(tempFileName, content, { encoding: 'utf8' })
-  await client.uploadArtifact(name, [tempFileName], '.')
+export async function uploadFilepathArtifact(name: string, filePath: string) {
+  await client.uploadArtifact(name, [filePath], '.')
 }
 
-export async function uploadPathArtifact(name: string, path: string) {
-  await client.uploadArtifact(name, [path], '.')
+async function extractDirSubpaths(baseDir: string) {
+  const dirents = await readdir(baseDir, { withFileTypes: true })
+  const paths: string[] = []
+  for (const dirent of dirents) {
+    if (dirent.isFile()) {
+      paths.push(path.join(baseDir, dirent.name))
+    } else if (dirent.isDirectory()) {
+      paths.push(...(await extractDirSubpaths(path.join(baseDir, dirent.name))))
+    }
+  }
+  return paths
+}
+
+export async function uploadFolderPathArtifact(
+  name: string,
+  folderPath: string
+) {
+  await client.uploadArtifact(name, await extractDirSubpaths(folderPath), '.')
 }

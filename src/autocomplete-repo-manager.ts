@@ -1,6 +1,11 @@
 import * as core from '@actions/core'
-import { File, Octokit, OctokitError, Repo } from './types'
+import * as path from 'path'
+import { Octokit, OctokitError, Repo } from './types'
+import { createFileBlob, createFolderBlobs } from './git-utils'
 import { isFile, timeout } from './utils'
+import { mkdir, writeFile } from 'fs/promises'
+
+export class AutocompleteRepoManagerError extends Error {}
 
 export class AutocompleteRepoManager {
   private declare autocompleteRepo: Repo
@@ -22,7 +27,7 @@ export class AutocompleteRepoManager {
     octokit: Octokit,
     fork: Repo,
     branchName: string,
-    changedFile: File
+    localSpecFileOrFolder: string
   ) {
     core.startGroup('commit')
     // create new branch on top of the upstream master
@@ -47,21 +52,12 @@ export class AutocompleteRepoManager {
     core.info(`Created a new branch on the fork: refs/heads/${branchName}`)
 
     // create new blob, new tree, commit everything and update PR branch
-    const newBlob = await octokit.rest.git.createBlob({
-      ...fork,
-      content: changedFile.content,
-      encoding: 'utf-8'
-    })
+    const blobs = localSpecFileOrFolder.endsWith('.ts')
+      ? [await createFileBlob(octokit, fork, localSpecFileOrFolder)]
+      : await createFolderBlobs(octokit, fork, localSpecFileOrFolder)
     const newTree = await octokit.rest.git.createTree({
       ...fork,
-      tree: [
-        {
-          path: changedFile.path,
-          sha: newBlob.data.sha,
-          mode: '100644',
-          type: 'blob'
-        }
-      ],
+      tree: blobs,
       base_tree: lastMainBranchCommit.data[0].commit.tree.sha
     })
 
@@ -166,26 +162,118 @@ export class AutocompleteRepoManager {
   /**
    * Gets a spec file from the autocomplete repo
    * @param octokit the Octokit object
-   * @param specPath the path relative to `src/` of the spec in the default autocomplete repo, excluding the extension
+   * @param repoFilepath a path of a file in the repo
+   * @param destinationPath the file path in which to write the `repoFilepath` file
    */
-  async getSpec(octokit: Octokit, specPath: string): Promise<string | null> {
+  async cloneFile(
+    octokit: Octokit,
+    repoFilepath: string,
+    destinationPath: string
+  ) {
+    core.startGroup('Starting to clone file...')
+    core.info(
+      `Cloning ${repoFilepath} from repo: ${JSON.stringify(
+        this.autocompleteRepo
+      )} into ${destinationPath}`
+    )
     let fileData
     try {
+      core.info('Started fetching file content...')
       fileData = await octokit.rest.repos.getContent({
         ...this.autocompleteRepo,
-        path: specPath
+        path: repoFilepath
       })
+      core.info('Finished fetching file content')
     } catch (error) {
       if ((error as OctokitError).status === 404) {
-        return null
+        core.info('File not found in autocomplete repo')
+        core.endGroup()
+        return false
       }
       throw error
     }
-    if (isFile(fileData.data)) {
-      return Buffer.from(fileData.data.content, 'base64').toString()
+    if (!isFile(fileData.data)) {
+      throw new Error(
+        `autocomplete-spec-name: ${repoFilepath} does not correspond to a valid file`
+      )
     }
-    throw new Error(
-      `spec-path: ${specPath} does not correspond to a valid file`
+
+    await mkdir(path.dirname(destinationPath))
+    core.info(`Started writing file...`)
+    await writeFile(
+      destinationPath,
+      Buffer.from(fileData.data.content, 'base64').toString(),
+      { encoding: 'utf8' }
     )
+    core.info(`Finished writing file`)
+    core.endGroup()
+    return true
+  }
+
+  /**
+   * Gets a spec folder from the autocomplete repo
+   * @param octokit the Octokit object
+   * @param repoFolderPath the path of a folder in the repo
+   * @param destinationFolderPath the local directory in which to write the contents of the `repoFolderPath` directory
+   */
+  async cloneSpecFolder(
+    octokit: Octokit,
+    repoFolderPath: string,
+    destinationFolderPath: string
+  ) {
+    core.startGroup('Starting to clone folder...')
+    core.info(
+      `Cloning ${repoFolderPath} from repo: ${JSON.stringify(
+        this.autocompleteRepo
+      )} into ${destinationFolderPath}`
+    )
+    let folderData
+    try {
+      core.info('Started fetching file content...')
+      folderData = (
+        await octokit.rest.repos.getContent({
+          ...this.autocompleteRepo,
+          path: repoFolderPath
+        })
+      ).data
+      core.info('Finished fetching file content')
+    } catch (error) {
+      if ((error as OctokitError).status === 404) {
+        core.info('Folder not found in autocomplete repo')
+        core.endGroup()
+        return false
+      }
+      throw error
+    }
+
+    if (!Array.isArray(folderData)) {
+      // this may only be reached by the first iteration
+      throw new Error(
+        `autocomplete-spec-name: ${repoFolderPath} does not correspond to a valid spec folder`
+      )
+    }
+
+    await mkdir(destinationFolderPath, { recursive: true })
+
+    for (const item of folderData) {
+      if (item.type === 'dir') {
+        core.info(`Object at ${repoFolderPath}/${item.path} is a folder`)
+        await this.cloneSpecFolder(
+          octokit,
+          `${repoFolderPath}/${item.path}`,
+          path.join(destinationFolderPath, item.path)
+        )
+      } else if (isFile(item)) {
+        core.info(`Object at ${repoFolderPath}/${item.path} is a file`)
+        core.info(`Started writing file...`)
+        await writeFile(
+          path.join(destinationFolderPath, item.path),
+          Buffer.from(item.content, 'base64').toString()
+        )
+        core.info(`Finished writing file`)
+      }
+    }
+    core.endGroup()
+    return true
   }
 }
