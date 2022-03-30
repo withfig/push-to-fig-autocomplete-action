@@ -109,22 +109,28 @@ export class AutocompleteRepoManager {
    * Rebase an autocomplete fork on top of the current autocomplete default branch
    */
   private async rebaseForkOnDefaultBranch(octokit: Octokit, fork: Repo) {
+    core.startGroup('Started rebasing fork...')
+    core.info(`Fork name: ${JSON.stringify(fork)}`)
+    core.info(
+      `Autocomplete repo name: ${JSON.stringify(this.autocompleteRepo)}`
+    )
+    core.info(`Base ref: heads/${this.autocompleteDefaultBranch}`)
+
     const upstreamMaster = await octokit.rest.git.getRef({
       ...this.autocompleteRepo,
       ref: `heads/${this.autocompleteDefaultBranch}`
     })
     const newSha = upstreamMaster.data.object.sha
+    core.info(`Current upstream default branch sha: ${newSha}`)
 
+    core.info('Started updating fork ref...')
     await octokit.rest.git.updateRef({
       ...fork,
       ref: `heads/${this.autocompleteDefaultBranch}`,
       sha: newSha
     })
-    core.info(
-      `Rebased ${JSON.stringify(fork)} on top of 'heads/${
-        this.autocompleteDefaultBranch
-      }'`
-    )
+    core.info('Finished updating fork ref')
+    core.endGroup()
   }
 
   /**

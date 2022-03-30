@@ -1,12 +1,10 @@
-import { generator } from './generators'
-
 const completion: Fig.Subcommand = {
   name: 'fig',
   description: 'Description',
   subcommands: [
     {
       name: 'remove',
-      args: { generator: [generator] },
+      args: { name: "name" },
     },
   ],
 }
