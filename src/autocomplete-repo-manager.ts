@@ -170,14 +170,24 @@ export class AutocompleteRepoManager {
     repoFilepath: string,
     destinationPath: string
   ) {
+    core.startGroup('Starting to clone file...')
+    core.info(
+      `Cloning ${repoFilepath} from repo: ${JSON.stringify(
+        this.autocompleteRepo
+      )} into ${destinationPath}`
+    )
     let fileData
     try {
+      core.info('Started fetching file content...')
       fileData = await octokit.rest.repos.getContent({
         ...this.autocompleteRepo,
         path: repoFilepath
       })
+      core.info('Finished fetching file content')
     } catch (error) {
       if ((error as OctokitError).status === 404) {
+        core.info('File not found in autocomplete repo')
+        core.endGroup()
         return false
       }
       throw error
@@ -188,11 +198,15 @@ export class AutocompleteRepoManager {
       )
     }
 
+    await mkdir(path.dirname(destinationPath))
+    core.info(`Started writing file...`)
     await writeFile(
       destinationPath,
       Buffer.from(fileData.data.content, 'base64').toString(),
       { encoding: 'utf8' }
     )
+    core.info(`Finished writing file`)
+    core.endGroup()
     return true
   }
 
@@ -207,16 +221,26 @@ export class AutocompleteRepoManager {
     repoFolderPath: string,
     destinationFolderPath: string
   ) {
+    core.startGroup('Starting to clone folder...')
+    core.info(
+      `Cloning ${repoFolderPath} from repo: ${JSON.stringify(
+        this.autocompleteRepo
+      )} into ${destinationFolderPath}`
+    )
     let folderData
     try {
+      core.info('Started fetching file content...')
       folderData = (
         await octokit.rest.repos.getContent({
           ...this.autocompleteRepo,
           path: repoFolderPath
         })
       ).data
+      core.info('Finished fetching file content')
     } catch (error) {
       if ((error as OctokitError).status === 404) {
+        core.info('Folder not found in autocomplete repo')
+        core.endGroup()
         return false
       }
       throw error
@@ -233,18 +257,23 @@ export class AutocompleteRepoManager {
 
     for (const item of folderData) {
       if (item.type === 'dir') {
+        core.info(`Object at ${repoFolderPath}/${item.path} is a folder`)
         await this.cloneSpecFolder(
           octokit,
           `${repoFolderPath}/${item.path}`,
           path.join(destinationFolderPath, item.path)
         )
       } else if (isFile(item)) {
+        core.info(`Object at ${repoFolderPath}/${item.path} is a file`)
+        core.info(`Started writing file...`)
         await writeFile(
           path.join(destinationFolderPath, item.path),
           Buffer.from(item.content, 'base64').toString()
         )
+        core.info(`Finished writing file`)
       }
     }
+    core.endGroup()
     return true
   }
 }
