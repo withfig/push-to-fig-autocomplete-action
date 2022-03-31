@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as path from 'path'
-import { Octokit, OctokitError, Repo } from './types'
+import { FileOrFolder, Octokit, OctokitError, Repo } from './types'
 import { createFileBlob, createFolderBlobs } from './git-utils'
 import { isFile, mkdirIfNotExists, timeout } from './utils'
 import { writeFile } from 'fs/promises'
@@ -27,7 +27,7 @@ export class AutocompleteRepoManager {
     octokit: Octokit,
     fork: Repo,
     branchName: string,
-    localSpecFileOrFolder: string
+    localSpecFileOrFolder: FileOrFolder
   ) {
     core.startGroup('commit')
     // create new branch on top of the upstream master
@@ -52,7 +52,7 @@ export class AutocompleteRepoManager {
     core.info(`Created a new branch on the fork: refs/heads/${branchName}`)
 
     // create new blob, new tree, commit everything and update PR branch
-    const blobs = localSpecFileOrFolder.endsWith('.ts')
+    const blobs = localSpecFileOrFolder.repoPath.endsWith('.ts')
       ? [await createFileBlob(octokit, fork, localSpecFileOrFolder)]
       : await createFolderBlobs(octokit, fork, localSpecFileOrFolder)
     const newTree = await octokit.rest.git.createTree({
