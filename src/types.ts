@@ -28,3 +28,5 @@ export interface File {
   path: string
   content: string
 }
+
+export type FileOrFolder = { localPath: string; repoPath: string }

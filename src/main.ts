@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as path from 'path'
+import { FileOrFolder, Repo } from './types'
 import { execAsync, mergeSpecs, timeout } from './utils'
 import { uploadFilepathArtifact, uploadFolderPathArtifact } from './artifact'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
-import { Repo } from './types'
 import { TMP_FOLDER } from './constants'
 import { getDefaultBranch } from './git-utils'
 import { lintAndFormatSpec } from './lint-format'
@@ -40,7 +40,7 @@ async function run() {
     )
 
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for spec-folder.
-    let localSpecFileOrFolder: string
+    let localSpecFileOrFolder: FileOrFolder
     // run eslint and prettier on top of the generated spec and report eventual errors
     await lintAndFormatSpec(newSpecPath)
     await uploadFilepathArtifact('new-spec.ts', newSpecPath)
@@ -60,9 +60,10 @@ async function run() {
       if (successfullyClonedSpecFile) {
         await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath)
         await uploadFilepathArtifact('merged-spec.ts', mergedSpecPath)
-        localSpecFileOrFolder = mergedSpecPath
-      } else {
-        localSpecFileOrFolder = newSpecPath
+      }
+      localSpecFileOrFolder = {
+        localPath: successfullyClonedSpecFile ? mergedSpecPath : newSpecPath,
+        repoPath: `src/${autocompleteSpecName}.ts`
       }
     } else {
       const newSpecVersion = core.getInput('new-spec-version')
@@ -94,7 +95,10 @@ async function run() {
         )} ${newSpecVersion}`
       )
 
-      localSpecFileOrFolder = localSpecFolder
+      localSpecFileOrFolder = {
+        repoPath: `src/${autocompleteSpecName}`,
+        localPath: localSpecFolder
+      }
     }
 
     // create autocomplete fork
