@@ -248,17 +248,17 @@ export class AutocompleteRepoManager {
 
     for (const item of folderData) {
       if (item.type === 'dir') {
-        core.info(`Object at ${repoFolderPath}/${item.path} is a folder`)
+        core.info(`Object at ${item.path} is a folder`)
         await this.cloneSpecFolder(
           octokit,
-          `${repoFolderPath}/${item.path}`,
-          path.join(destinationFolderPath, item.path)
+          item.path,
+          path.join(destinationFolderPath, item.name)
         )
       } else if (isFile(item)) {
-        core.info(`Object at ${repoFolderPath}/${item.path} is a file`)
+        core.info(`Object at ${item.path} is a file`)
         core.info(`Started writing file...`)
         await writeFile(
-          path.join(destinationFolderPath, item.path),
+          path.join(destinationFolderPath, item.name),
           Buffer.from(item.content, 'base64').toString()
         )
         core.info(`Finished writing file`)

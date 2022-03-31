@@ -47,6 +47,6 @@ We also provide support for third party autocomplete repos via the following inp
 - `repo-org`: name of the organization/user that stores the third party autocomplete repository (default: `withfig`)
 - `repo-name`: name of the third party autocomplete repository (default: `autocomplete`)
 - `diff-based-versioning`: use new diff-based versioning (default: false) (__requires__: `new-spec-version` to be set if `diff-based-versioning` is true)
-- `new-spec-version`: the new spec version (required and only used when diff-based-versioning is true)
+- `new-spec-version`: the new spec version (only required when using diff-based-versioning)
 
 > NOTE: third party autocomplete repos must be structured as the official autocomplete one. Run `npx @withfig/autocomplete-tools@latest init` to generate one.
