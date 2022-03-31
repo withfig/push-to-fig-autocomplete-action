@@ -254,14 +254,13 @@ export class AutocompleteRepoManager {
           item.path,
           path.join(destinationFolderPath, item.name)
         )
-      } else if (isFile(item)) {
+      } else if (item.type === 'file') {
         core.info(`Object at ${item.path} is a file`)
-        core.info(`Started writing file...`)
-        await writeFile(
-          path.join(destinationFolderPath, item.name),
-          Buffer.from(item.content, 'base64').toString()
+        await this.cloneFile(
+          octokit,
+          item.path,
+          path.join(destinationFolderPath, item.name)
         )
-        core.info(`Finished writing file`)
       }
     }
     core.endGroup()
