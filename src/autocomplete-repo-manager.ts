@@ -2,8 +2,8 @@ import * as core from '@actions/core'
 import * as path from 'path'
 import { Octokit, OctokitError, Repo } from './types'
 import { createFileBlob, createFolderBlobs } from './git-utils'
-import { isFile, timeout } from './utils'
-import { mkdir, writeFile } from 'fs/promises'
+import { isFile, mkdirIfNotExists, timeout } from './utils'
+import { writeFile } from 'fs/promises'
 
 export class AutocompleteRepoManagerError extends Error {}
 
@@ -189,7 +189,7 @@ export class AutocompleteRepoManager {
       )
     }
 
-    await mkdir(path.dirname(destinationPath))
+    await mkdirIfNotExists(path.dirname(destinationPath), { recursive: true })
     core.info(`Started writing file...`)
     await writeFile(
       destinationPath,
@@ -244,7 +244,7 @@ export class AutocompleteRepoManager {
       )
     }
 
-    await mkdir(destinationFolderPath, { recursive: true })
+    await mkdirIfNotExists(destinationFolderPath, { recursive: true })
 
     for (const item of folderData) {
       if (item.type === 'dir') {

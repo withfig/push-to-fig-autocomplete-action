@@ -1,8 +1,9 @@
 import * as core from '@actions/core'
 import { PresetName, merge } from '@fig/autocomplete-merge'
-import { readFile, writeFile } from 'fs/promises'
+import { mkdir, readFile, writeFile } from 'fs/promises'
 import { File } from './types'
 import { exec } from 'child_process'
+import { existsSync } from 'fs'
 import { lintAndFormatSpec } from './lint-format'
 
 export async function mergeSpecs(
@@ -49,4 +50,10 @@ export async function execAsync(
       resolve({ stdout: trimmed(stdout), stderr: trimmed(stderr) })
     })
   })
+}
+
+export async function mkdirIfNotExists(...args: Parameters<typeof mkdir>) {
+  if (!existsSync(args[0])) {
+    await mkdir(...args)
+  }
 }
