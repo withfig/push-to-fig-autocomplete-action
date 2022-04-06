@@ -90,7 +90,9 @@ async function run() {
         )
       }
       await execAsync(
-        `cd ${TMP_FOLDER} && npx @withfig/autocomplete-tools@latest version add-diff ${autocompleteSpecName} ${newSpecPath} ${newSpecVersion}`
+        `cd ${TMP_FOLDER} && npx @withfig/autocomplete-tools@latest version add-diff ${autocompleteSpecName} ${path.resolve(
+          newSpecPath
+        )} ${newSpecVersion}`
       )
 
       localSpecFileOrFolder = {
