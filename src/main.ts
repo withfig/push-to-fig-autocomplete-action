@@ -102,12 +102,14 @@ async function run() {
     }
 
     // create autocomplete fork
+    const basePRsBranchName = `auto-update/${autocompleteSpecName}`
     const autocompleteFork = await autocompleteRepoManager.checkOrCreateFork(
-      octokit
+      octokit,
+      basePRsBranchName
     )
 
     // commit the file to a new branch on the autocompletefork
-    const newBranchName = `auto-update/${autocompleteSpecName}/${randomUUID()}`
+    const newBranchName = `${basePRsBranchName}/${randomUUID()}`
     await autocompleteRepoManager.createCommitOnForkNewBranch(
       octokit,
       autocompleteFork,

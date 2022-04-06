@@ -118,10 +118,34 @@ export class AutocompleteRepoManager {
     core.info('Finished rebasing fork')
   }
 
+  private async removePreviousBranches(
+    octokit: Octokit,
+    fork: Repo,
+    basePRsBranchName: string
+  ) {
+    const branches = await octokit.rest.repos.listBranches({
+      ...fork,
+      per_page: 100
+    })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const branchesToRemove: Promise<any>[] = []
+    for (const branch of branches.data) {
+      if (branch.name.startsWith(basePRsBranchName)) {
+        branchesToRemove.push(
+          octokit.rest.git.deleteRef({ ...fork, ref: `heads/${branch.name}` })
+        )
+      }
+    }
+    await Promise.all(branchesToRemove)
+  }
+
   /**
    * Checks if a fork of the autocomplete repo already exists or it creates a new one for the current user
    */
-  async checkOrCreateFork(octokit: Octokit): Promise<Repo> {
+  async checkOrCreateFork(
+    octokit: Octokit,
+    basePRsBranchName: string
+  ): Promise<Repo> {
     const user = await octokit.rest.users.getAuthenticated()
     core.info(`Authenticated user: ${user.data.login}`)
 
@@ -135,6 +159,7 @@ export class AutocompleteRepoManager {
         core.info('A fork of the target autocomplete repo already exists')
         const forkData = { owner: fork.owner.login, repo: fork.name }
         await this.rebaseForkOnDefaultBranch(octokit, forkData)
+        await this.removePreviousBranches(octokit, forkData, basePRsBranchName)
         return forkData
       }
     }
