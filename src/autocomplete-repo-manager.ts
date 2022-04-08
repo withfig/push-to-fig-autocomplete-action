@@ -3,6 +3,7 @@ import * as path from 'path'
 import { FileOrFolder, Octokit, OctokitError, Repo } from './types'
 import { createFileBlob, createFolderBlobs } from './git-utils'
 import { isFile, mkdirIfNotExists, timeout } from './utils'
+import { listForks } from './graphql-queries'
 import { writeFile } from 'fs/promises'
 
 export class AutocompleteRepoManagerError extends Error {}
@@ -10,6 +11,11 @@ export class AutocompleteRepoManagerError extends Error {}
 export class AutocompleteRepoManager {
   private declare autocompleteRepo: Repo
   private declare autocompleteDefaultBranch: string
+  /**
+   * This octokit instance won't be the one of the user holding the `autocompleteRepo`, but
+   * of the user who is trying to push an update to the `autocompleteRepo`
+   */
+  private declare octokit: Octokit
 
   get repo() {
     return {
@@ -18,32 +24,36 @@ export class AutocompleteRepoManager {
     }
   }
 
-  constructor(autocompleteRepo: Repo, autocompleteDefaultBranch: string) {
+  constructor(
+    autocompleteRepo: Repo,
+    autocompleteDefaultBranch: string,
+    octokit: Octokit
+  ) {
     this.autocompleteRepo = autocompleteRepo
     this.autocompleteDefaultBranch = autocompleteDefaultBranch
+    this.octokit = octokit
   }
 
   async createCommitOnForkNewBranch(
-    octokit: Octokit,
     fork: Repo,
     branchName: string,
     localSpecFileOrFolder: FileOrFolder
   ) {
     core.startGroup('commit')
     // create new branch on top of the upstream master
-    const masterRef = await octokit.rest.git.getRef({
+    const masterRef = await this.octokit.rest.git.getRef({
       ...fork,
       ref: `heads/${this.autocompleteDefaultBranch}`
     })
 
-    const lastMainBranchCommit = await octokit.rest.repos.listCommits({
+    const lastMainBranchCommit = await this.octokit.rest.repos.listCommits({
       ...fork,
       per_page: 1,
       page: 1
     })
 
     // create new branch
-    await octokit.rest.git.createRef({
+    await this.octokit.rest.git.createRef({
       ...fork,
       ref: `refs/heads/${branchName}`,
       sha: masterRef.data.object.sha
@@ -53,15 +63,15 @@ export class AutocompleteRepoManager {
 
     // create new blob, new tree, commit everything and update PR branch
     const blobs = localSpecFileOrFolder.repoPath.endsWith('.ts')
-      ? [await createFileBlob(octokit, fork, localSpecFileOrFolder)]
-      : await createFolderBlobs(octokit, fork, localSpecFileOrFolder)
-    const newTree = await octokit.rest.git.createTree({
+      ? [await createFileBlob(this.octokit, fork, localSpecFileOrFolder)]
+      : await createFolderBlobs(this.octokit, fork, localSpecFileOrFolder)
+    const newTree = await this.octokit.rest.git.createTree({
       ...fork,
       tree: blobs,
       base_tree: lastMainBranchCommit.data[0].commit.tree.sha
     })
 
-    const newCommit = await octokit.rest.git.createCommit({
+    const newCommit = await this.octokit.rest.git.createCommit({
       ...fork,
       message: 'feat: update spec',
       tree: newTree.data.sha,
@@ -70,7 +80,7 @@ export class AutocompleteRepoManager {
 
     core.info(`Created new commit: ${newCommit.data.sha}`)
 
-    octokit.rest.git.updateRef({
+    await this.octokit.rest.git.updateRef({
       ...fork,
       ref: `heads/${branchName}`,
       sha: newCommit.data.sha,
@@ -82,7 +92,6 @@ export class AutocompleteRepoManager {
   }
 
   async createAutocompleteRepoPR(
-    octokit: Octokit,
     specName: string,
     forkOwner: string,
     branchName: string
@@ -91,7 +100,7 @@ export class AutocompleteRepoManager {
       core.getInput('pr-body') ||
       'PR generated automatically from push-to-fig-autocomplete-action.'
     // create a new branch in the fork and create
-    const result = await octokit.rest.pulls.create({
+    const result = await this.octokit.rest.pulls.create({
       ...this.autocompleteRepo,
       title: `feat(${specName}): update spec`,
       head: `${forkOwner}:${branchName}`,
@@ -108,9 +117,9 @@ export class AutocompleteRepoManager {
   /**
    * Rebase an autocomplete fork on top of the current autocomplete default branch
    */
-  private async rebaseForkOnDefaultBranch(octokit: Octokit, fork: Repo) {
+  private async rebaseForkOnDefaultBranch(fork: Repo) {
     core.info('Started rebasing fork...')
-    await octokit.rest.repos.mergeUpstream({
+    await this.octokit.rest.repos.mergeUpstream({
       ...fork,
       branch: this.autocompleteDefaultBranch,
       merge_type: 'fast-forward'
@@ -118,53 +127,88 @@ export class AutocompleteRepoManager {
     core.info('Finished rebasing fork')
   }
 
-  private async removePreviousBranches(
-    octokit: Octokit,
-    fork: Repo,
-    basePRsBranchName: string
-  ) {
-    const branches = await octokit.rest.repos.listBranches({
+  private async removePreviousBranches(fork: Repo, branchPrefix: string) {
+    const branches = await this.octokit.rest.repos.listBranches({
       ...fork,
       per_page: 100
     })
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const branchesToRemove: Promise<any>[] = []
     for (const branch of branches.data) {
-      if (branch.name.startsWith(basePRsBranchName)) {
+      if (branch.name.startsWith(branchPrefix)) {
         branchesToRemove.push(
-          octokit.rest.git.deleteRef({ ...fork, ref: `heads/${branch.name}` })
+          this.octokit.rest.git.deleteRef({
+            ...fork,
+            ref: `heads/${branch.name}`
+          })
         )
       }
     }
     await Promise.all(branchesToRemove)
   }
 
+  private async sanitizeFork(fork: Repo, basePRsBranchName: string) {
+    core.info('A fork of the target autocomplete repo already exists')
+    await this.rebaseForkOnDefaultBranch(fork)
+    await this.removePreviousBranches(fork, basePRsBranchName)
+    return fork
+  }
+
+  private async *listForks() {
+    let cursor: string | null = null
+    while (true) {
+      const {
+        repository: {
+          // @ts-expect-error There is a type error with pageInfo type not being inferred
+          forks: { nodes, pageInfo }
+        }
+      } = await listForks(this.octokit, this.autocompleteRepo, cursor)
+      yield* nodes
+      if (!pageInfo.hasNextPage) return
+      cursor = pageInfo.endCursor
+    }
+  }
+
   /**
    * Checks if a fork of the autocomplete repo already exists or it creates a new one for the current user
    */
-  async checkOrCreateFork(
-    octokit: Octokit,
-    basePRsBranchName: string
-  ): Promise<Repo> {
-    const user = await octokit.rest.users.getAuthenticated()
+  async checkOrCreateFork(basePRsBranchName: string): Promise<Repo> {
+    const user = await this.octokit.rest.users.getAuthenticated()
     core.info(`Authenticated user: ${user.data.login}`)
 
-    const autocompleteForks = await octokit.rest.repos.listForks(
-      this.autocompleteRepo
-    )
+    // check if the authenticated user has a fork of the autocomplete repo with the same name as the default autocomplete
+    try {
+      const possibleForkData = {
+        owner: user.data.login,
+        repo: this.autocompleteRepo.repo
+      }
+      const {
+        data: { parent }
+      } = await this.octokit.rest.repos.get(possibleForkData)
+      if (
+        parent?.owner.login === this.autocompleteRepo.owner &&
+        parent?.name === this.autocompleteRepo.repo
+      ) {
+        return await this.sanitizeFork(possibleForkData, basePRsBranchName)
+      }
+      // eslint-disable-next-line no-empty
+    } catch {}
 
-    for (let i = 0; i < autocompleteForks.data.length; i++) {
-      const fork = autocompleteForks.data[i]
+    // otherwise check all the forks of the target autocomplete
+    for await (const fork of this.listForks()) {
       if (fork.owner.login === user.data.login) {
-        core.info('A fork of the target autocomplete repo already exists')
-        const forkData = { owner: fork.owner.login, repo: fork.name }
-        await this.rebaseForkOnDefaultBranch(octokit, forkData)
-        await this.removePreviousBranches(octokit, forkData, basePRsBranchName)
-        return forkData
+        return await this.sanitizeFork(
+          {
+            owner: fork.owner.login,
+            repo: fork.name
+          },
+          basePRsBranchName
+        )
       }
     }
 
-    const createdFork = await octokit.rest.repos.createFork(
+    // if still no fork has been found create a new one
+    const createdFork = await this.octokit.rest.repos.createFork(
       this.autocompleteRepo
     )
     await timeout(15_000) // wait 15 seconds to let github create the new repo (it may take longer and require the action to be rerun)
@@ -181,11 +225,7 @@ export class AutocompleteRepoManager {
    * @param repoFilepath a path of a file in the repo
    * @param destinationPath the file path in which to write the `repoFilepath` file
    */
-  async cloneFile(
-    octokit: Octokit,
-    repoFilepath: string,
-    destinationPath: string
-  ) {
+  async cloneFile(repoFilepath: string, destinationPath: string) {
     core.startGroup('Starting to clone file...')
     core.info(
       `Cloning ${repoFilepath} from repo: ${JSON.stringify(
@@ -195,7 +235,7 @@ export class AutocompleteRepoManager {
     let fileData
     try {
       core.info('Started fetching file content...')
-      fileData = await octokit.rest.repos.getContent({
+      fileData = await this.octokit.rest.repos.getContent({
         ...this.autocompleteRepo,
         path: repoFilepath
       })
@@ -232,11 +272,7 @@ export class AutocompleteRepoManager {
    * @param repoFolderPath the path of a folder in the repo
    * @param destinationFolderPath the local directory in which to write the contents of the `repoFolderPath` directory
    */
-  async cloneSpecFolder(
-    octokit: Octokit,
-    repoFolderPath: string,
-    destinationFolderPath: string
-  ) {
+  async cloneSpecFolder(repoFolderPath: string, destinationFolderPath: string) {
     core.startGroup('Starting to clone folder...')
     core.info(
       `Cloning ${repoFolderPath} from repo: ${JSON.stringify(
@@ -247,7 +283,7 @@ export class AutocompleteRepoManager {
     try {
       core.info('Started fetching file content...')
       folderData = (
-        await octokit.rest.repos.getContent({
+        await this.octokit.rest.repos.getContent({
           ...this.autocompleteRepo,
           path: repoFolderPath
         })
@@ -275,14 +311,12 @@ export class AutocompleteRepoManager {
       if (item.type === 'dir') {
         core.info(`Object at ${item.path} is a folder`)
         await this.cloneSpecFolder(
-          octokit,
           item.path,
           path.join(destinationFolderPath, item.name)
         )
       } else if (item.type === 'file') {
         core.info(`Object at ${item.path} is a file`)
         await this.cloneFile(
-          octokit,
           item.path,
           path.join(destinationFolderPath, item.name)
         )

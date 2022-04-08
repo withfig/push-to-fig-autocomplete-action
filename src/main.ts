@@ -30,7 +30,8 @@ async function run() {
     }
     const autocompleteRepoManager = new AutocompleteRepoManager(
       repo,
-      await getDefaultBranch(octokit, repo)
+      await getDefaultBranch(octokit, repo),
+      octokit
     )
 
     core.info(
@@ -50,7 +51,6 @@ async function run() {
       const oldSpecPath = path.join(TMP_FOLDER, 'old-spec.ts')
       const successfullyClonedSpecFile =
         await autocompleteRepoManager.cloneFile(
-          octokit,
           `src/${autocompleteSpecName}.ts`,
           oldSpecPath
         )
@@ -76,7 +76,6 @@ async function run() {
       const localSpecFolder = path.join(TMP_FOLDER, autocompleteSpecName)
       const successfullyClonedSpecFolder =
         await autocompleteRepoManager.cloneSpecFolder(
-          octokit,
           `src/${autocompleteSpecName}`,
           localSpecFolder
         )
@@ -104,14 +103,12 @@ async function run() {
     // create autocomplete fork
     const basePRsBranchName = `auto-update/${autocompleteSpecName}`
     const autocompleteFork = await autocompleteRepoManager.checkOrCreateFork(
-      octokit,
       basePRsBranchName
     )
 
     // commit the file to a new branch on the autocompletefork
     const newBranchName = `${basePRsBranchName}/${randomUUID()}`
     await autocompleteRepoManager.createCommitOnForkNewBranch(
-      octokit,
       autocompleteFork,
       newBranchName,
       localSpecFileOrFolder
@@ -122,7 +119,6 @@ async function run() {
     // create a PR from the branch with changes
     const createdPRNumber =
       await autocompleteRepoManager.createAutocompleteRepoPR(
-        octokit,
         autocompleteSpecName,
         autocompleteFork.owner,
         newBranchName
