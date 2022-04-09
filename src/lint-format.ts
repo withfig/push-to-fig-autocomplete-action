@@ -14,7 +14,7 @@ export async function runEslintOnPath(path: string) {
 
 export async function runPrettierOnPath(path: string) {
   core.info(`Started running prettier on spec file: ${path}`)
-  await execAsync(`npx prettier ${path} --parser typescript -w`)
+  await execAsync(`npx prettier@latest ${path} --write --parser typescript`)
   core.info('Finished running prettier on spec file')
 }
 
