@@ -85,13 +85,13 @@ async function run() {
       } else {
         // spec-folder does not exist in autocomplete repo so we create a new one locally and then upload to the autocomplete repo
         await execAsync(
-          `mkdir -p ${localSpecFolder} && cd ${localSpecFolder} && npx @withfig/autocomplete-tools@latest version init-spec ${autocompleteSpecName}`
+          `npx @withfig/autocomplete-tools@2 version init-spec ${autocompleteSpecName} --cwd ${localSpecFolder}`
         )
       }
       await execAsync(
-        `cd ${TMP_FOLDER} && npx @withfig/autocomplete-tools@latest version add-diff ${autocompleteSpecName} ${path.resolve(
+        `npx @withfig/autocomplete-tools@2 version add-diff ${autocompleteSpecName} ${path.resolve(
           newSpecPath
-        )} ${newSpecVersion}`
+        )} ${newSpecVersion} --cwd ${TMP_FOLDER}`
       )
 
       localSpecFileOrFolder = {
