@@ -34,11 +34,14 @@ export class AutocompleteRepoManager {
     this.octokit = octokit
   }
 
+  /**
+   * @returns if commit has diff from the previous one
+   */
   async createCommitOnForkNewBranch(
     fork: Repo,
     branchName: string,
     localSpecFileOrFolder: FileOrFolder
-  ) {
+  ): Promise<boolean> {
     core.startGroup('commit')
     // create new branch on top of the upstream master
     const masterRef = await this.octokit.rest.git.getRef({
@@ -87,8 +90,20 @@ export class AutocompleteRepoManager {
       force: true
     })
 
+    const hasChanges =
+      (
+        (
+          await this.octokit.rest.repos.compareCommitsWithBasehead({
+            ...fork,
+            basehead: `${lastMainBranchCommit.data[0].sha}...${newCommit.data.sha}`
+          })
+        ).data.files ?? []
+      ).length > 0
+
     core.info('Updated the created branch to point to the new commit')
     core.endGroup()
+
+    return hasChanges
   }
 
   async createAutocompleteRepoPR(
