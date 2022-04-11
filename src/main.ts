@@ -108,22 +108,27 @@ async function run() {
 
     // commit the file to a new branch on the autocompletefork
     const newBranchName = `${basePRsBranchName}/${randomUUID()}`
-    await autocompleteRepoManager.createCommitOnForkNewBranch(
-      autocompleteFork,
-      newBranchName,
-      localSpecFileOrFolder
-    )
-
-    // skip 500ms because github returns a validation error otherwise (commit is sync)
-    await timeout(500)
-    // create a PR from the branch with changes
-    const createdPRNumber =
-      await autocompleteRepoManager.createAutocompleteRepoPR(
-        autocompleteSpecName,
-        autocompleteFork.owner,
-        newBranchName
+    const commitHasDiff =
+      await autocompleteRepoManager.createCommitOnForkNewBranch(
+        autocompleteFork,
+        newBranchName,
+        localSpecFileOrFolder
       )
-    core.setOutput('pr-number', createdPRNumber)
+
+    if (commitHasDiff) {
+      // skip 500ms because github returns a validation error otherwise (commit is sync)
+      await timeout(500)
+      // create a PR from the branch with changes
+      const createdPRNumber =
+        await autocompleteRepoManager.createAutocompleteRepoPR(
+          autocompleteSpecName,
+          autocompleteFork.owner,
+          newBranchName
+        )
+      core.setOutput('pr-number', createdPRNumber)
+    } else {
+      core.info('No diffs found between old and new specs')
+    }
   } catch (error) {
     core.error(
       `${(error as Error).name}: ${(error as Error).message}\n\n${
