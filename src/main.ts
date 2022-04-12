@@ -67,6 +67,7 @@ async function run() {
       }
     } else {
       const newSpecVersion = core.getInput('new-spec-version')
+      const useMinorBase = core.getBooleanInput('use-minor-base')
       if (!newSpecVersion) {
         throw new Error(
           'You need to specify `new-spec-version` when using `diff-based-versioning: true`'
@@ -89,7 +90,9 @@ async function run() {
         )
       }
       await execAsync(
-        `npx @withfig/autocomplete-tools@2 version add-diff ${autocompleteSpecName} ${path.resolve(
+        `npx @withfig/autocomplete-tools@2 version add-diff ${
+          useMinorBase ? '--use-minor-base' : ''
+        } ${autocompleteSpecName} ${path.resolve(
           newSpecPath
         )} ${newSpecVersion} --cwd ${TMP_FOLDER}`
       )

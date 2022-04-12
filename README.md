@@ -48,5 +48,6 @@ We also provide support for third party autocomplete repos via the following inp
 - `repo-name`: name of the third party autocomplete repository (default: `autocomplete`)
 - `diff-based-versioning`: use new diff-based versioning (default: false) (__requires__: `new-spec-version` to be set if `diff-based-versioning` is true)
 - `new-spec-version`: the new spec version (only required when using diff-based-versioning)
+- `use-minor-base`: create a new version file per each minor version (only used with diff-based-versioning) (default: `false`)
 
 > NOTE: third party autocomplete repos must be structured as the official autocomplete one. Run `npx @withfig/autocomplete-tools@latest init` to generate one.

@@ -18,8 +18,13 @@ inputs:
   diff-based-versioning:
     description: 'Use new diff-based versioning'
     default: false
+  # Diff based versioning params
   new-spec-version:
     description: 'The new spec version (only required when using diff-based-versioning)'
+  use-minor-base:
+    descripttion: 'Create a new version file per each minor version'
+    default: false
+  # Optional params
   repo-org:
     description: 'The name of the organization that contains the repo in which to create the PR'
     default: 'withfig'
