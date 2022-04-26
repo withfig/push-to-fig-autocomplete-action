@@ -9,9 +9,7 @@ export async function runEslintOnPath(path: string) {
   })
   await execAsync('npm i @fig/eslint-config-autocomplete@latest eslint@latest')
   await execAsync(
-    `npx eslint ${
-      !path.endsWith('.ts') ? '--no-ignore' : ''
-    } --config .tmp-eslintrc --fix ${path}`
+    `npx eslint@latest --no-ignore --debug --config .tmp-eslintrc --fix ${path}`
   )
   core.info('Finished running eslint on spec file')
 }
