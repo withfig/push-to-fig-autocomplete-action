@@ -8,9 +8,7 @@ export async function runEslintOnPath(path: string) {
     encoding: 'utf8'
   })
   await execAsync('npm i @fig/eslint-config-autocomplete')
-  await execAsync(
-    `npx eslint@8 --config .tmp-eslintrc --no-ignore --fix ${path}`
-  )
+  await execAsync(`npx eslint@8 --config .tmp-eslintrc --fix ${path}`)
   core.info('Finished running eslint on spec file')
 }
 
