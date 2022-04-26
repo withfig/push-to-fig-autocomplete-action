@@ -7,7 +7,7 @@ import { uploadFilepathArtifact, uploadFolderPathArtifact } from './artifact'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
 import { TMP_FOLDER } from './constants'
 import { getDefaultBranch } from './git-utils'
-import { lintAndFormatSpec, runEslintOnPath } from './lint-format'
+import { lintAndFormatSpec } from './lint-format'
 import { randomUUID } from 'crypto'
 
 async function run() {
@@ -97,7 +97,7 @@ async function run() {
         )} ${newSpecVersion} --cwd ${TMP_FOLDER}`
       )
 
-      await runEslintOnPath(path.resolve(TMP_FOLDER, autocompleteSpecName))
+      await lintAndFormatSpec(path.resolve(TMP_FOLDER, autocompleteSpecName))
 
       localSpecFileOrFolder = {
         repoPath: `src/${autocompleteSpecName}`,

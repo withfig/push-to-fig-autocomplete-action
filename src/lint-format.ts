@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { execAsync } from './utils'
 import { writeFile } from 'fs/promises'
 
-export async function runEslintOnPath(path: string) {
+async function runEslintOnPath(path: string) {
   core.info(`Started running eslint on spec file: ${path}`)
   await writeFile(
     '.tmp-eslintrc',
@@ -13,12 +13,12 @@ export async function runEslintOnPath(path: string) {
   )
   await execAsync('npm i @fig/eslint-config-autocomplete@latest eslint@8')
   await execAsync(
-    `npx eslint@8 --debug --no-ignore --config .tmp-eslintrc --fix ${path}`
+    `npx eslint@8 --debug --no-ignore --no-eslintrc --config .tmp-eslintrc --fix ${path}`
   )
   core.info('Finished running eslint on spec file')
 }
 
-export async function runPrettierOnPath(path: string) {
+async function runPrettierOnPath(path: string) {
   core.info(`Started running prettier on spec file: ${path}`)
   await execAsync(
     `npx prettier@2 ${path} --no-config --write --parser typescript`
