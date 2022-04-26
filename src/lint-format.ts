@@ -7,9 +7,11 @@ export async function runEslintOnPath(path: string) {
   await writeFile('.tmp-eslintrc', '{"extends":"@fig/autocomplete"}', {
     encoding: 'utf8'
   })
-  await execAsync('npm i @fig/eslint-config-autocomplete')
+  await execAsync('npm i @fig/eslint-config-autocomplete@latest eslint@latest')
   await execAsync(
-    `npx eslint@8 --no-ignore --config .tmp-eslintrc --fix ${path}`
+    `npx eslint ${
+      !path.endsWith('.ts') ? '--no-ignore' : ''
+    } --config .tmp-eslintrc --fix ${path}`
   )
   core.info('Finished running eslint on spec file')
 }
