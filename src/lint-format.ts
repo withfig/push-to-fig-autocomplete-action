@@ -11,7 +11,9 @@ async function runEslintOnPath(path: string) {
       encoding: 'utf8'
     }
   )
-  await execAsync('npm i @fig/eslint-config-autocomplete@latest eslint@8')
+  await execAsync(
+    'npm i @fig/eslint-config-autocomplete@latest eslint@8 @typescript-eslint/parser@5 @typescript-eslint/eslint-plugin@5'
+  )
   await execAsync(
     `npx eslint@8 --no-ignore --no-eslintrc --config .tmp-eslintrc --fix ${path}`
   )
