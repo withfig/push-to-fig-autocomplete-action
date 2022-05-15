@@ -9,6 +9,8 @@ import { TMP_FOLDER } from './constants'
 import { getDefaultBranch } from './git-utils'
 import { lintAndFormatSpec } from './lint-format'
 import { randomUUID } from 'crypto'
+import { copyFile, mkdir } from 'fs/promises'
+import { existsSync } from 'fs'
 
 async function run() {
   try {
@@ -16,7 +18,8 @@ async function run() {
     const autocompleteSpecName = core.getInput('autocomplete-spec-name', {
       required: true
     })
-    const newSpecPath = core.getInput('spec-path', { required: true })
+    // The local path of the new spec relative to the repo root e.g. `fig_cli/generated-fig.ts`
+    const newSpecPathInRepo = core.getInput('spec-path', { required: true })
     const repoOrg = core.getInput('repo-org')
     const repoName = core.getInput('repo-name')
     const diffBasedVersioning =
@@ -40,10 +43,17 @@ async function run() {
       )}`
     )
 
-    // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for spec-folder.
+    if (!existsSync(TMP_FOLDER)) {
+      await mkdir(TMP_FOLDER)
+    }
+
+    // The path to the spec copied to the temp directory
+    const newSpecPath = path.join(TMP_FOLDER, `${randomUUID()}.ts`)
+    // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
     let localSpecFileOrFolder: FileOrFolder
-    // run eslint and prettier on top of the generated spec and report eventual errors
-    await lintAndFormatSpec(newSpecPath)
+    // Run eslint and prettier on top of the generated spec and report eventual errors
+    await copyFile(path.resolve(newSpecPathInRepo), newSpecPath)
+    await lintAndFormatSpec(newSpecPath, TMP_FOLDER)
     await uploadFilepathArtifact('new-spec.ts', newSpecPath)
 
     if (!diffBasedVersioning) {
@@ -58,7 +68,7 @@ async function run() {
 
       const mergedSpecPath = path.join(TMP_FOLDER, 'merged-spec.ts')
       if (successfullyClonedSpecFile) {
-        await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath)
+        await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath, TMP_FOLDER)
         await uploadFilepathArtifact('merged-spec.ts', mergedSpecPath)
       }
       localSpecFileOrFolder = {
@@ -97,7 +107,7 @@ async function run() {
         )} ${newSpecVersion} --cwd ${TMP_FOLDER}`
       )
 
-      await lintAndFormatSpec(path.resolve(TMP_FOLDER, autocompleteSpecName))
+      await lintAndFormatSpec(localSpecFolder, TMP_FOLDER)
 
       localSpecFileOrFolder = {
         repoPath: `src/${autocompleteSpecName}`,
