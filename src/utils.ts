@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import * as path from 'path'
 import { PresetName, merge } from '@fig/autocomplete-merge'
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import { File } from './types'
@@ -9,7 +10,8 @@ import { lintAndFormatSpec } from './lint-format'
 export async function mergeSpecs(
   oldSpecFilepath: string,
   newSpecFilepath: string,
-  mergedSpecFilepath: string
+  mergedSpecFilepath: string,
+  cwd: string
 ) {
   const integration = core.getInput('integration') as PresetName
   core.startGroup('Merge specs')
@@ -22,7 +24,7 @@ export async function mergeSpecs(
     prettifyOutput: false
   })
   await writeFile(mergedSpecFilepath, mergedSpecContent, { encoding: 'utf8' })
-  await lintAndFormatSpec(mergedSpecFilepath)
+  await lintAndFormatSpec(path.relative(cwd, mergedSpecFilepath), cwd)
   core.endGroup()
 }
 
@@ -40,12 +42,13 @@ export async function timeout(time: number): Promise<void> {
 }
 
 export async function execAsync(
-  command: string
+  command: string,
+  cwd?: string
 ): Promise<{ stdout: string; stderr: string }> {
   const trimmed = (b: string) => String(b).trim()
 
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout, stderr) => {
+    exec(command, { cwd }, (error, stdout, stderr) => {
       if (error) return reject(error)
       resolve({ stdout: trimmed(stdout), stderr: trimmed(stderr) })
     })
