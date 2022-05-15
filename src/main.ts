@@ -47,9 +47,9 @@ async function run() {
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
     let localSpecFileOrFolder: FileOrFolder
     // Run eslint and prettier on top of the generated spec and report eventual errors
-    await copyFile(newSpecPathInRepo, newSpecPath)
+    await copyFile(path.resolve(newSpecPathInRepo), newSpecPath)
     await lintAndFormatSpec(newSpecPath, TMP_FOLDER)
-    await uploadFilepathArtifact('new-spec.ts', newSpecPathInRepo)
+    await uploadFilepathArtifact('new-spec.ts', newSpecPath)
 
     if (!diffBasedVersioning) {
       // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
