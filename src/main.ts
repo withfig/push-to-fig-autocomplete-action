@@ -43,7 +43,7 @@ async function run() {
     )
 
     // The path to the spec copied to the temp directory
-    const newSpecPath = path.join(TMP_FOLDER, randomUUID())
+    const newSpecPath = path.join(TMP_FOLDER, `${randomUUID()}.ts`)
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
     let localSpecFileOrFolder: FileOrFolder
     // Run eslint and prettier on top of the generated spec and report eventual errors
