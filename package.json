@@ -1,6 +1,6 @@
 {
   "name": "push-to-fig-autocomplete-action",
-  "version": "1.0.0-alpha.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Action to automatically open a new PR to the withfig/autocomplete repo",
   "main": "lib/main.js",

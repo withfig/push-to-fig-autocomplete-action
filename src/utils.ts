@@ -1,5 +1,4 @@
 import * as core from '@actions/core'
-import * as path from 'path'
 import { PresetName, merge } from '@fig/autocomplete-merge'
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import { File } from './types'
@@ -24,7 +23,7 @@ export async function mergeSpecs(
     prettifyOutput: false
   })
   await writeFile(mergedSpecFilepath, mergedSpecContent, { encoding: 'utf8' })
-  await lintAndFormatSpec(path.relative(cwd, mergedSpecFilepath), cwd)
+  await lintAndFormatSpec(mergedSpecFilepath, cwd)
   core.endGroup()
 }
 
