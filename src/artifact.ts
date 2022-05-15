@@ -5,7 +5,7 @@ import { readdir } from 'fs/promises'
 const client = artifact.create()
 
 export async function uploadFilepathArtifact(name: string, filePath: string) {
-  await client.uploadArtifact(name, [filePath], '.')
+  await client.uploadArtifact(name, [filePath], '/')
 }
 
 async function extractDirSubpaths(baseDir: string) {
@@ -13,9 +13,11 @@ async function extractDirSubpaths(baseDir: string) {
   const paths: string[] = []
   for (const dirent of dirents) {
     if (dirent.isFile()) {
-      paths.push(path.join(baseDir, dirent.name))
+      paths.push(path.resolve(baseDir, dirent.name))
     } else if (dirent.isDirectory()) {
-      paths.push(...(await extractDirSubpaths(path.join(baseDir, dirent.name))))
+      paths.push(
+        ...(await extractDirSubpaths(path.resolve(baseDir, dirent.name)))
+      )
     }
   }
   return paths
@@ -25,5 +27,5 @@ export async function uploadFolderPathArtifact(
   name: string,
   folderPath: string
 ) {
-  await client.uploadArtifact(name, await extractDirSubpaths(folderPath), '.')
+  await client.uploadArtifact(name, await extractDirSubpaths(folderPath), '/')
 }
