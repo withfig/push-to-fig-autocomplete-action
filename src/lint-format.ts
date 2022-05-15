@@ -4,7 +4,7 @@ import { execAsync } from './utils'
 import { writeFile } from 'fs/promises'
 
 async function runEslintOnPath(p: string, cwd: string) {
-  core.info(`Started running eslint on spec: ${path.join(cwd, p)}`)
+  core.startGroup(`Started running eslint on spec: ${path.join(cwd, p)}`)
   await writeFile(
     path.join(cwd, '.tmp-eslintrc'),
     '{"root": true,"extends":"@fig/autocomplete"}',
@@ -13,11 +13,13 @@ async function runEslintOnPath(p: string, cwd: string) {
     }
   )
   await execAsync('npm i @fig/eslint-config-autocomplete@latest eslint@8', cwd)
-  await execAsync(
-    `npx eslint@8 --no-ignore --no-eslintrc --config .tmp-eslintrc --fix ${p}`,
+  const logs = await execAsync(
+    `npx eslint@8 --no-ignore --no-eslintrc --config .tmp-eslintrc --debug --fix ${p}`,
     cwd
   )
-  core.info('Finished running eslint on spec file')
+  core.info(`Output: ${logs.stdout}`)
+  core.error(`Errors: ${logs.stderr}`)
+  core.endGroup()
 }
 
 async function runPrettierOnPath(p: string, cwd: string) {
