@@ -10,6 +10,7 @@ import { getDefaultBranch } from './git-utils'
 import { lintAndFormatSpec } from './lint-format'
 import { randomUUID } from 'crypto'
 import { copyFile } from 'fs/promises'
+import { existsSync } from 'fs'
 
 async function run() {
   try {
@@ -43,6 +44,7 @@ async function run() {
     )
 
     // The path to the spec copied to the temp directory
+    if (!existsSync(TMP_FOLDER)) throw new Error('NON ESISTE')
     const newSpecPath = path.join(TMP_FOLDER, `${randomUUID()}.ts`)
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
     let localSpecFileOrFolder: FileOrFolder
