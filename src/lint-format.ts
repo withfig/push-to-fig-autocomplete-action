@@ -28,7 +28,7 @@ async function runEslintOnPath(p: string, cwd: string) {
 async function runPrettierOnPath(p: string, cwd: string) {
   core.info(`Started running prettier on spec: ${p}`)
   await execAsync(
-    `npx prettier@2 ${p} --no-config --write --parser typescript`,
+    `npx prettier@2 ${p} --trailing-comma es5 --print-width 80 --no-config --write --parser typescript`,
     cwd
   )
   core.info('Finished running prettier on spec file')

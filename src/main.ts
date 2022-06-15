@@ -5,7 +5,7 @@ import { FileOrFolder, Repo } from './types'
 import { execAsync, mergeSpecs, timeout } from './utils'
 import { uploadFilepathArtifact, uploadFolderPathArtifact } from './artifact'
 import { AutocompleteRepoManager } from './autocomplete-repo-manager'
-import { TMP_FOLDER } from './constants'
+import { TMP_FOLDER, TMP_AUTOCOMPLETE_SRC_MOCK } from './constants'
 import { getDefaultBranch } from './git-utils'
 import { lintAndFormatSpec } from './lint-format'
 import { randomUUID } from 'crypto'
@@ -43,12 +43,15 @@ async function run() {
       )}`
     )
 
-    if (!existsSync(TMP_FOLDER)) {
-      await mkdir(TMP_FOLDER)
+    if (!existsSync(TMP_AUTOCOMPLETE_SRC_MOCK)) {
+      await mkdir(TMP_AUTOCOMPLETE_SRC_MOCK, { recursive: true })
     }
 
     // The path to the spec copied to the temp directory
-    const newSpecPath = path.join(TMP_FOLDER, `${randomUUID()}.ts`)
+    const newSpecPath = path.join(
+      TMP_AUTOCOMPLETE_SRC_MOCK,
+      `${randomUUID()}.ts`
+    )
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
     let localSpecFileOrFolder: FileOrFolder
     // Run eslint and prettier on top of the generated spec and report eventual errors
@@ -58,7 +61,7 @@ async function run() {
 
     if (!diffBasedVersioning) {
       // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
-      const oldSpecPath = path.join(TMP_FOLDER, 'old-spec.ts')
+      const oldSpecPath = path.join(TMP_AUTOCOMPLETE_SRC_MOCK, 'old-spec.ts')
       const successfullyClonedSpecFile =
         await autocompleteRepoManager.cloneFile(
           `src/${autocompleteSpecName}.ts`,
@@ -66,7 +69,10 @@ async function run() {
         )
       await uploadFilepathArtifact('old-spec.ts', oldSpecPath)
 
-      const mergedSpecPath = path.join(TMP_FOLDER, 'merged-spec.ts')
+      const mergedSpecPath = path.join(
+        TMP_AUTOCOMPLETE_SRC_MOCK,
+        'merged-spec.ts'
+      )
       if (successfullyClonedSpecFile) {
         await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath, TMP_FOLDER)
         await uploadFilepathArtifact('merged-spec.ts', mergedSpecPath)
@@ -84,7 +90,10 @@ async function run() {
         )
       }
 
-      const localSpecFolder = path.join(TMP_FOLDER, autocompleteSpecName)
+      const localSpecFolder = path.join(
+        TMP_AUTOCOMPLETE_SRC_MOCK,
+        autocompleteSpecName
+      )
       const successfullyClonedSpecFolder =
         await autocompleteRepoManager.cloneSpecFolder(
           `src/${autocompleteSpecName}`,
@@ -96,18 +105,16 @@ async function run() {
       } else {
         // spec-folder does not exist in autocomplete repo so we create a new one locally and then upload to the autocomplete repo
         await execAsync(
-          `npx @withfig/autocomplete-tools@2 version init-spec ${autocompleteSpecName} --cwd ${localSpecFolder}`
+          `npx @withfig/autocomplete-tools@2 version init-spec ${autocompleteSpecName} --cwd ${TMP_AUTOCOMPLETE_SRC_MOCK}`
         )
       }
       await execAsync(
         `npx @withfig/autocomplete-tools@2 version add-diff ${
           useMinorBase ? '--use-minor-base' : ''
-        } ${autocompleteSpecName} ${path.resolve(
-          newSpecPath
-        )} ${newSpecVersion} --cwd ${TMP_FOLDER}`
+        } ${autocompleteSpecName} ${newSpecPath} ${newSpecVersion} --cwd ${TMP_AUTOCOMPLETE_SRC_MOCK}`
       )
 
-      await lintAndFormatSpec(localSpecFolder, TMP_FOLDER)
+      await lintAndFormatSpec(localSpecFolder, TMP_AUTOCOMPLETE_SRC_MOCK)
 
       localSpecFileOrFolder = {
         repoPath: `src/${autocompleteSpecName}`,
