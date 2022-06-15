@@ -44,7 +44,7 @@ async function run() {
     )
 
     if (!existsSync(TMP_AUTOCOMPLETE_SRC_MOCK)) {
-      await mkdir(TMP_AUTOCOMPLETE_SRC_MOCK)
+      await mkdir(TMP_AUTOCOMPLETE_SRC_MOCK, { recursive: true })
     }
 
     // The path to the spec copied to the temp directory
