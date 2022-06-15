@@ -1,9 +1,9 @@
 const completionSpec: Fig.completionSpec = {
   name: "fig",
-  description: "Updated description",
+  description: "updated description",
   subcommands: [{
     name: "update",
-    description: "Updated description",
+    description: "   updated description with lowercase letter at the beginning, trailing dot and leading spaces.",
   }, {
     name: "remove",
   }],
