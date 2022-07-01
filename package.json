@@ -34,7 +34,7 @@
     "@actions/artifact": "^1.0.0",
     "@actions/core": "^1.6.0",
     "@actions/github": "^5.0.0",
-    "@fig/autocomplete-merge": "^1.1.1"
+    "@fig/autocomplete-merge": "^1.3.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.4.1",
