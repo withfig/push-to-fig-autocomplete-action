@@ -6,7 +6,7 @@ import { writeFile } from 'fs/promises'
 // TODO: find a way to have shared configs for all autocomplete tools)
 async function runEslintOnPath(p: string, cwd: string) {
   core.startGroup(`Started running eslint on spec: ${path.join(cwd, p)}`)
-  await writeFile(path.join(cwd, '.browserslistrc'), 'safari >=11', {
+  await writeFile(path.join(cwd, '.browserslistrc'), 'safari >=11\nedge >=79', {
     encoding: 'utf8'
   })
   await writeFile(
