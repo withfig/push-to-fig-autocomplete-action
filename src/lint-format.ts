@@ -22,6 +22,7 @@ async function runEslintOnPath(p: string, cwd: string) {
     cwd
   )
   core.info(`Output: ${logs.stdout}`)
+  core.info(`Errors: ${logs.stderr}`)
   core.endGroup()
 }
 

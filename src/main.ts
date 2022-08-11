@@ -114,7 +114,7 @@ async function run() {
         } ${autocompleteSpecName} ${newSpecPath} ${newSpecVersion} --cwd ${TMP_AUTOCOMPLETE_SRC_MOCK}`
       )
 
-      await lintAndFormatSpec(localSpecFolder, TMP_AUTOCOMPLETE_SRC_MOCK)
+      await lintAndFormatSpec(localSpecFolder, TMP_FOLDER)
 
       localSpecFileOrFolder = {
         repoPath: `src/${autocompleteSpecName}`,
