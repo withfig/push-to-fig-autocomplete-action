@@ -2,15 +2,14 @@
   <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
 </p>
 
-
 ## Usage
 
 ```yml
-name: 'Publish version'
+name: "Publish version"
 on:
   push:
-    tags:        
-      - 'v*'
+    tags:
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -22,7 +21,8 @@ jobs:
       - name: Generate the spec
         run:
           ## Execute commands to generate the spec through some official or third party integration
-      - name: Create Autocomplete PR
+      - name:
+          Create Autocomplete PR
           ## Create the autocomplete PR using this action
         uses: withfig/publish-to-fig-autocomplete@v1
         with:
@@ -44,9 +44,10 @@ jobs:
 - `pr-body`: set a custom PR body description
 
 We also provide support for third party autocomplete repos via the following inputs:
+
 - `repo-org`: name of the organization/user that stores the third party autocomplete repository (default: `withfig`)
 - `repo-name`: name of the third party autocomplete repository (default: `autocomplete`)
-- `diff-based-versioning`: use new diff-based versioning (default: false) (__requires__: `new-spec-version` to be set if `diff-based-versioning` is true)
+- `diff-based-versioning`: use new diff-based versioning (default: false) (**requires**: `new-spec-version` to be set if `diff-based-versioning` is true)
 - `new-spec-version`: the new spec version (only required when using diff-based-versioning)
 - `use-minor-base`: create a new version file per each minor version (only used with diff-based-versioning) (default: `false`)
 
