@@ -1,36 +1,36 @@
-name: 'Update Fig Autocomplete spec'
-description: 'Action to automatically open a new PR to the withfig/autocomplete repo'
-author: 'Fig'
+name: "Update Fig Autocomplete spec"
+description: "Action to automatically open a new PR to the withfig/autocomplete repo"
+author: "Fig"
 inputs:
   token:
-    description: 'GitHub access token'
+    description: "GitHub access token"
     default: ${{ github.token }}
   autocomplete-spec-name:
     required: true
-    description: 'The spec name in the autocomplete repo. Do not include extension and do not include src/ at the beginning'
+    description: "The spec name in the autocomplete repo. Do not include extension and do not include src/ at the beginning"
   spec-path:
     required: true
-    description: 'The path to the spec in the actual repo'
+    description: "The path to the spec in the actual repo"
   integration:
-    description: 'The official Fig integration name used to autogenerate the spec'
+    description: "The official Fig integration name used to autogenerate the spec"
   pr-body:
-    description: 'The created PR description'
+    description: "The created PR description"
   diff-based-versioning:
-    description: 'Use new diff-based versioning'
-    default: false
+    description: "Use new diff-based versioning"
+    default: "false"
   # Diff based versioning params
   new-spec-version:
-    description: 'The new spec version (only required when using diff-based-versioning)'
+    description: "The new spec version (only required when using diff-based-versioning)"
   use-minor-base:
-    descripttion: 'Create a new version file per each minor version'
-    default: false
+    description: "Create a new version file per each minor version"
+    default: "false"
   # Optional params
   repo-org:
-    description: 'The name of the organization that contains the repo in which to create the PR'
-    default: 'withfig'
-  repo-name: 
-    description: 'The name of the repo in which to create the PR'
-    default: 'autocomplete'
+    description: "The name of the organization that contains the repo in which to create the PR"
+    default: "withfig"
+  repo-name:
+    description: "The name of the repo in which to create the PR"
+    default: "autocomplete"
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: "node20"
+  main: "dist/index.js"

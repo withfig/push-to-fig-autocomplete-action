@@ -9,5 +9,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true
   },
-  "exclude": ["node_modules", "dist/", "**/*.test.ts", "src/__integration-tests__/*"]
+  "exclude": [
+    "node_modules",
+    "dist/",
+    "**/*.test.ts",
+    "src/__integration-tests__/*"
+  ]
 }
