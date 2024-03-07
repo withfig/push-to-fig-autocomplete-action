@@ -21,10 +21,12 @@ async function runEslintOnPath(p: string, cwd: string) {
     `npx eslint@8 --no-ignore --no-eslintrc --config .tmp-eslintrc --debug --fix ${p}`,
     cwd,
   );
-  // eslint-disable-next-line no-console
-  console.log(`Output: ${logs.stdout}`);
-  // eslint-disable-next-line no-console
-  console.log(`Errors: ${logs.stderr}`);
+  for (const line of logs.stdout.split("\n")) {
+    core.info(line);
+  }
+  for (const line of logs.stderr.split("\n")) {
+    core.info(line);
+  }
   core.endGroup();
 }
 
