@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as core from "@actions/core";
-import { execAsync } from "./utils";
+import { execAsync, execAsyncWithLogs } from "./utils";
 import { writeFile } from "node:fs/promises";
 
 // TODO: find a way to have shared configs for all autocomplete tools)
@@ -17,16 +17,10 @@ async function runEslintOnPath(p: string, cwd: string) {
     },
   );
   await execAsync("npm i @fig/eslint-config-autocomplete@latest eslint@8", cwd);
-  const logs = await execAsync(
+  await execAsyncWithLogs(
     `npx eslint@8 --no-ignore --no-eslintrc --config .tmp-eslintrc --debug --fix ${p}`,
     cwd,
   );
-  for (const line of logs.stdout.split("\n")) {
-    core.info(line);
-  }
-  for (const line of logs.stderr.split("\n")) {
-    core.info(line);
-  }
   core.endGroup();
 }
 
