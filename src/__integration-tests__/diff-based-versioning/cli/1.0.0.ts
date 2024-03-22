@@ -1,17 +1,27 @@
 const completion: Fig.Subcommand = {
-  name: 'fig',
-  description: 'Description',
+  name: "fig",
+  description: "Description",
   subcommands: [
     {
-      name: 'remove',
+      name: "remove",
       args: { name: "name" },
     },
   ],
-}
+};
 
-const versions: Fig.VersionDiffMap = {}
+const versions: Fig.VersionDiffMap = {};
 
-versions['1.0.0'] = {}
+versions["1.0.0"] = {};
 
-export { versions }
-export default completion
+versions["1.1.0"] = {
+  description: "Updated description",
+  subcommands: [
+    {
+      name: "update",
+      description: "New command description",
+    },
+  ],
+};
+
+export { versions };
+export default completion;
