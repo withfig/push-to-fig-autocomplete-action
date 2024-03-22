@@ -8,7 +8,7 @@
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
-    "package": "esbuild --bundle src/main.ts --outfile=dist/index.js --minify --sourcemap --platform=node",
+    "package": "esbuild --bundle src/main.ts --outfile=dist/index.js --minify --keep-names --sourcemap --platform=node",
     "test": "jest --passWithNoTests",
     "all": "npm run format && npm run lint && npm run package && npm test",
     "prepare": "husky install"
