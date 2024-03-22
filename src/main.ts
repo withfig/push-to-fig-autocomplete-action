@@ -57,7 +57,7 @@ async function run(): Promise<void> {
     // Run eslint and prettier on top of the generated spec and report eventual errors
     await copyFile(path.resolve(newSpecPathInRepo), newSpecPath);
     await lintAndFormatSpec(newSpecPath, TMP_FOLDER);
-    await uploadFilepathArtifact("new-spec.ts", newSpecPath);
+    await uploadFilepathArtifact(`new-spec-${randomUUID()}.ts`, newSpecPath);
 
     if (!diffBasedVersioning) {
       // check if spec already exist in autocomplete repo, if it does => run merge tool and merge it
@@ -67,7 +67,7 @@ async function run(): Promise<void> {
           `src/${autocompleteSpecName}.ts`,
           oldSpecPath,
         );
-      await uploadFilepathArtifact("old-spec.ts", oldSpecPath);
+      await uploadFilepathArtifact(`old-spec-${randomUUID()}.ts`, oldSpecPath);
 
       const mergedSpecPath = path.join(
         TMP_AUTOCOMPLETE_SRC_MOCK,
@@ -75,7 +75,10 @@ async function run(): Promise<void> {
       );
       if (successfullyClonedSpecFile) {
         await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath, TMP_FOLDER);
-        await uploadFilepathArtifact("merged-spec.ts", mergedSpecPath);
+        await uploadFilepathArtifact(
+          `merged-spec-${randomUUID()}.ts`,
+          mergedSpecPath,
+        );
       }
       localSpecFileOrFolder = {
         localPath: successfullyClonedSpecFile ? mergedSpecPath : newSpecPath,
@@ -101,7 +104,10 @@ async function run(): Promise<void> {
         );
 
       if (successfullyClonedSpecFolder) {
-        await uploadFolderPathArtifact("old-spec-folder", localSpecFolder);
+        await uploadFolderPathArtifact(
+          `old-spec-folder-${randomUUID()}`,
+          localSpecFolder,
+        );
       } else {
         // spec-folder does not exist in autocomplete repo so we create a new one locally and then upload to the autocomplete repo
         await execAsync(
