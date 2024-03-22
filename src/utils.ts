@@ -54,6 +54,23 @@ export async function execAsync(
   });
 }
 
+export async function execAsyncWithLogs(
+  command: string,
+  cwd?: string,
+): Promise<void> {
+  return new Promise((resolve) => {
+    const child = exec(command, { cwd }, () => {
+      resolve();
+    });
+    child.stdout?.on("data", function (data) {
+      core.info(data);
+    });
+    child.stderr?.on("data", function (data) {
+      core.info(data);
+    });
+  });
+}
+
 export async function mkdirIfNotExists(
   ...args: Parameters<typeof mkdir>
 ): Promise<void> {
