@@ -12,10 +12,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          npm install
+
+      - name: Set Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: true
+
+      - name: Rebuild the dist/ directory
+        run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run all
+          pnpm run all
   test-simple-spec: # make sure the action works on a clean machine without building
     if: startsWith(github.head_ref, 'auto-update') == false
     runs-on: ubuntu-latest
