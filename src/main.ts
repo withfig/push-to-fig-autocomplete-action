@@ -119,7 +119,7 @@ async function run(): Promise<void> {
           );
 
           for (const file of await readdir(newSpecFolderPath)) {
-            if (existsSync(path.join(newSpecFolderPath, file))) {
+            if (existsSync(path.join(localSpecFolder, file))) {
               await mergeSpecs(
                 path.join(localSpecFolder, file),
                 path.join(newSpecFolderPath, file),
