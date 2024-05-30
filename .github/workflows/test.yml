@@ -45,7 +45,7 @@ jobs:
           pr-body: "Integration test (simple-spec)"
           diff-based-versioning: false
       - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
+        uses: peter-evans/close-pull@v3
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
           pull-request-number: ${{ steps.simple-spec.outputs.pr-number }}
@@ -71,7 +71,7 @@ jobs:
           diff-based-versioning: true
           new-spec-version: 1.1.0
       - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
+        uses: peter-evans/close-pull@v3
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
           pull-request-number: ${{ steps.diff-based-versioning.outputs.pr-number }}
@@ -95,7 +95,7 @@ jobs:
           repo-org: withfig
           pr-body: "Integration test (spec-folder)"
       - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
+        uses: peter-evans/close-pull@v3
         with:
           token: ${{ secrets.FIG_BOT_TOKEN }}
           pull-request-number: ${{ steps.spec-folder.outputs.pr-number }}
