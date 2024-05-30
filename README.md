@@ -24,7 +24,7 @@ jobs:
       - name:
           Create Autocomplete PR
           ## Create the autocomplete PR using this action
-        uses: withfig/publish-to-fig-autocomplete@v1
+        uses: withfig/publish-to-fig-autocomplete@v2
         with:
           token: ${{ secrets.YOUR_PAT_HERE }}
           autocomplete-spec-name: generated-spec
