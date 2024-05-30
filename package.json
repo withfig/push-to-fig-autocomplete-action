@@ -28,7 +28,7 @@
     "node",
     "setup"
   ],
-  "author": "Federico Ciardi <fed.ciardi@gmail.com>",
+  "author": "Grant Gurvis <grangurv@amazon.com>",
   "license": "MIT",
   "dependencies": {
     "@actions/artifact": "^2.1.4",

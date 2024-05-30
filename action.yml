@@ -11,6 +11,8 @@ inputs:
   spec-path:
     required: true
     description: "The path to the spec in the actual repo"
+  spec-folder-path:
+    description: "The path to an additional folder with specs in the repo, used for very large specs which use `loadSpec`"
   integration:
     description: "The official Fig integration name used to autogenerate the spec"
   pr-body:

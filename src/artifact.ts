@@ -1,6 +1,6 @@
 import { DefaultArtifactClient } from "@actions/artifact";
-import * as path from "path";
-import { readdir } from "fs/promises";
+import * as path from "node:path";
+import { readdir } from "node:fs/promises";
 
 const client = new DefaultArtifactClient();
 
