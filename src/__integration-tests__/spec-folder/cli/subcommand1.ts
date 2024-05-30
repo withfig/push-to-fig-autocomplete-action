@@ -4,9 +4,11 @@ const completionSpec: Fig.Spec = {
   subcommands: [
     {
       name: "blah",
-      description: "Some description",
+      description: "Updated description",
+    },
+    {
+      name: "new",
     },
   ],
 };
-
 export default completionSpec;
