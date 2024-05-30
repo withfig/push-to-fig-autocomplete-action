@@ -12,6 +12,7 @@ export async function mergeSpecs(
   newSpecFilepath: string,
   mergedSpecFilepath: string,
   cwd: string,
+  { skipLintAndFormat }: { skipLintAndFormat?: boolean } | undefined = {},
 ): Promise<void> {
   const integration = core.getInput("integration") as PresetName;
   core.startGroup("Merge specs");
@@ -24,7 +25,9 @@ export async function mergeSpecs(
     prettifyOutput: false,
   });
   await writeFile(mergedSpecFilepath, mergedSpecContent, { encoding: "utf8" });
-  await lintAndFormatSpec(mergedSpecFilepath, cwd);
+  if (!skipLintAndFormat) {
+    await lintAndFormatSpec(mergedSpecFilepath, cwd);
+  }
   core.endGroup();
 }
 
@@ -78,4 +81,8 @@ export async function mkdirIfNotExists(
   if (!existsSync(args[0])) {
     await mkdir(...args);
   }
+}
+
+export async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
