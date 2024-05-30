@@ -1,7 +1,9 @@
 import * as github from "@actions/github";
+import * as core from "@actions/core";
 import * as path from "node:path";
 import type { Blob, FileOrFolder, Octokit, Repo } from "./types";
 import { readFile, readdir } from "node:fs/promises";
+import { sleep } from "./utils";
 
 export async function getDefaultBranch(
   octokit: Octokit,
@@ -15,6 +17,7 @@ export async function createFileBlob(
   repo: Repo,
   filePath: FileOrFolder,
 ): Promise<Blob> {
+  core.info(`Creating blob for ${filePath.localPath}`);
   const newBlob = await octokit.rest.git.createBlob({
     ...repo,
     content: await readFile(filePath.localPath, {
@@ -22,6 +25,11 @@ export async function createFileBlob(
     }),
     encoding: "utf-8",
   });
+  core.info(`Created blob for ${filePath.localPath}: ${newBlob.data.sha}`);
+
+  // sleep for 1 second to avoid rate limiting
+  await sleep(1000);
+
   return {
     path: filePath.repoPath,
     sha: newBlob.data.sha,

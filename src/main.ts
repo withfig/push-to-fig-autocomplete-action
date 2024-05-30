@@ -120,28 +120,26 @@ async function run(): Promise<void> {
 
           for (const file of await readdir(newSpecFolderPath)) {
             if (existsSync(path.join(localSpecFolder, file))) {
+              core.startGroup(`Merging ${file}`);
               await mergeSpecs(
                 path.join(localSpecFolder, file),
                 path.join(newSpecFolderPath, file),
                 path.join(newSpecFolderPath, file),
                 TMP_FOLDER,
+                {
+                  skipLintAndFormat: true,
+                },
               );
-            } else {
-              await lintAndFormatSpec(
-                path.join(newSpecFolderPath, file),
-                TMP_FOLDER,
-              );
+              core.endGroup();
             }
           }
-        } else {
-          for (const file of await readdir(newSpecFolderPath)) {
-            lintAndFormatSpec(path.join(newSpecFolderPath, file), TMP_FOLDER);
-          }
-          await uploadFolderPathArtifact(
-            `new-spec-folder-${randomUUID()}`,
-            newSpecFolderPath,
-          );
         }
+
+        await lintAndFormatSpec(newSpecFolderPath, TMP_FOLDER);
+        await uploadFolderPathArtifact(
+          `new-spec-folder-${randomUUID()}`,
+          newSpecFolderPath,
+        );
 
         localSpecFileOrFolder.push({
           repoPath: `src/${autocompleteSpecName}`,
@@ -219,8 +217,8 @@ async function run(): Promise<void> {
       );
 
     if (commitHasDiff) {
-      // skip 500ms because github returns a validation error otherwise (commit is sync)
-      await timeout(500);
+      // skip 1s because github returns a validation error otherwise (commit is sync)
+      await timeout(1000);
       // create a PR from the branch with changes
       const createdPRNumber =
         await autocompleteRepoManager.createAutocompleteRepoPR(
@@ -238,6 +236,11 @@ async function run(): Promise<void> {
         (error as Error).stack
       }`,
     );
+    if (error instanceof Error || typeof error === "string") {
+      core.setFailed(error);
+    } else {
+      core.setFailed(`${error}`);
+    }
   }
 }
 

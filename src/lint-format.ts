@@ -3,8 +3,27 @@ import * as core from "@actions/core";
 import { execFileAsync, execFileAsyncWithLogs } from "./utils";
 import { writeFile } from "node:fs/promises";
 
+let hasInstalledDependencies = false;
+async function installDependencies(cwd: string) {
+  if (hasInstalledDependencies) {
+    return;
+  }
+
+  core.startGroup("Installing dependencies");
+  await execFileAsync(
+    "npm",
+    ["i", "@fig/eslint-config-autocomplete@latest", "eslint@8"],
+    { cwd },
+  );
+  core.endGroup();
+
+  hasInstalledDependencies = true;
+}
+
 // TODO: find a way to have shared configs for all autocomplete tools)
 async function runEslintOnPath(p: string, cwd: string) {
+  await installDependencies(cwd);
+
   core.startGroup(`Started running eslint on spec: ${path.join(cwd, p)}`);
   await writeFile(path.join(cwd, ".browserslistrc"), "safari >=11\nedge >=79", {
     encoding: "utf8",
@@ -15,11 +34,6 @@ async function runEslintOnPath(p: string, cwd: string) {
     {
       encoding: "utf8",
     },
-  );
-  await execFileAsync(
-    "npm",
-    ["i", "@fig/eslint-config-autocomplete@latest", "eslint@8"],
-    { cwd },
   );
   await execFileAsyncWithLogs(
     "npx",

@@ -24,6 +24,10 @@ export class AutocompleteRepoManager {
     };
   }
 
+  autocompleteRepoString() {
+    return `${this.autocompleteRepo.owner}/${this.autocompleteRepo.repo}`;
+  }
+
   constructor(
     autocompleteRepo: Repo,
     autocompleteDefaultBranch: string,
@@ -65,6 +69,7 @@ export class AutocompleteRepoManager {
     core.info(`Created a new branch on the fork: refs/heads/${branchName}`);
 
     // create new blob, new tree, commit everything and update PR branch
+    core.startGroup("Creating file blobs");
     const blobs = [];
     for (const fileOrFolder of localSpecFileOrFolder) {
       const stats = await stat(fileOrFolder.localPath);
@@ -80,6 +85,7 @@ export class AutocompleteRepoManager {
         );
       }
     }
+    core.endGroup();
 
     const newTree = await this.octokit.rest.git.createTree({
       ...fork,
@@ -255,9 +261,7 @@ export class AutocompleteRepoManager {
   async cloneFile(repoFilepath: string, destinationPath: string) {
     core.startGroup("Starting to clone file...");
     core.info(
-      `Cloning ${repoFilepath} from repo: ${JSON.stringify(
-        this.autocompleteRepo,
-      )} into ${destinationPath}`,
+      `Cloning ${repoFilepath} from repo: ${this.autocompleteRepoString()} into ${destinationPath}`,
     );
     let fileData;
     try {
@@ -302,9 +306,7 @@ export class AutocompleteRepoManager {
   async cloneSpecFolder(repoFolderPath: string, destinationFolderPath: string) {
     core.startGroup("Starting to clone folder...");
     core.info(
-      `Cloning ${repoFolderPath} from repo: ${JSON.stringify(
-        this.autocompleteRepo,
-      )} into ${destinationFolderPath}`,
+      `Cloning ${repoFolderPath} from repo: ${this.autocompleteRepoString()} into ${destinationFolderPath}`,
     );
     let folderData;
     try {

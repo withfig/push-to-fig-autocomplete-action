@@ -15,11 +15,12 @@ jobs:
 
       - name: Set Node.js
         uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
           run_install: true
 
       - name: Rebuild the dist/ directory
@@ -44,13 +45,10 @@ jobs:
           repo-org: withfig
           pr-body: "Integration test (simple-spec)"
           diff-based-versioning: false
-      - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
-        with:
-          token: ${{ secrets.FIG_BOT_TOKEN }}
-          pull-request-number: ${{ steps.simple-spec.outputs.pr-number }}
-          comment: "Closing created PR"
-          delete-branch: true
+      - name: Close Pull
+        run: gh pr close --comment "Closing created PR" --delete-branch ${{ steps.simple-spec.outputs.pr-number }}
+        env:
+          GH_TOKEN: ${{ secrets.FIG_BOT_TOKEN }}
 
   test-diff-based-versioning:
     if: startsWith(github.head_ref, 'auto-update') == false
@@ -70,13 +68,10 @@ jobs:
           pr-body: "Integration test (diff-based-versioning)"
           diff-based-versioning: true
           new-spec-version: 1.1.0
-      - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
-        with:
-          token: ${{ secrets.FIG_BOT_TOKEN }}
-          pull-request-number: ${{ steps.diff-based-versioning.outputs.pr-number }}
-          comment: "Closing created PR"
-          delete-branch: true
+      - name: Close Pull
+        run: gh pr close --comment "Closing created PR" --delete-branch ${{ steps.diff-based-versioning.outputs.pr-number }}
+        env:
+          GH_TOKEN: ${{ secrets.FIG_BOT_TOKEN }}
 
   test-spec-folder:
     if: startsWith(github.head_ref, 'auto-update') == false
@@ -94,10 +89,7 @@ jobs:
           repo-name: push-to-fig-autocomplete-action
           repo-org: withfig
           pr-body: "Integration test (spec-folder)"
-      - name: Close Pull Request
-        uses: peter-evans/close-pull@v2
-        with:
-          token: ${{ secrets.FIG_BOT_TOKEN }}
-          pull-request-number: ${{ steps.spec-folder.outputs.pr-number }}
-          comment: "Closing created PR"
-          delete-branch: true
+      - name: Close Pull
+        run: gh pr close --comment "Closing created PR" --delete-branch ${{ steps.spec-folder.outputs.pr-number }}
+        env:
+          GH_TOKEN: ${{ secrets.FIG_BOT_TOKEN }}

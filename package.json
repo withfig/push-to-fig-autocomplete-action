@@ -4,6 +4,7 @@
   "private": true,
   "description": "Action to automatically open a new PR to the withfig/autocomplete repo",
   "main": "lib/main.js",
+  "packageManager": "pnpm@9.1.4",
   "scripts": {
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
