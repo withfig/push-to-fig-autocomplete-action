@@ -1,10 +1,11 @@
 import * as core from "@actions/core";
-import { PresetName, merge } from "@fig/autocomplete-merge";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import { File } from "./types";
-import { exec } from "child_process";
-import { existsSync } from "fs";
+import { merge, type PresetName } from "@fig/autocomplete-merge";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import type { File } from "./types";
+import { execFile, type ExecFileOptions } from "node:child_process";
+import { existsSync } from "node:fs";
 import { lintAndFormatSpec } from "./lint-format";
+import { promisify } from "node:util";
 
 export async function mergeSpecs(
   oldSpecFilepath: string,
@@ -40,26 +41,26 @@ export async function timeout(time: number): Promise<void> {
   });
 }
 
-export async function execAsync(
-  command: string,
-  cwd?: string,
+export async function execFileAsync(
+  file: string,
+  args: readonly string[] | undefined | null,
+  options?: ExecFileOptions,
 ): Promise<{ stdout: string; stderr: string }> {
-  const trimmed = (b: string): string => String(b).trim();
-
-  return new Promise((resolve, reject) => {
-    exec(command, { cwd }, (error, stdout, stderr) => {
-      if (error) return reject(error);
-      resolve({ stdout: trimmed(stdout), stderr: trimmed(stderr) });
-    });
-  });
+  const { stdout, stderr } = await promisify(execFile)(
+    file,
+    args,
+    options ?? {},
+  );
+  return { stdout: stdout.trim(), stderr: stderr.trim() };
 }
 
-export async function execAsyncWithLogs(
-  command: string,
-  cwd?: string,
+export async function execFileAsyncWithLogs(
+  file: string,
+  args: readonly string[] | undefined | null,
+  options?: ExecFileOptions,
 ): Promise<void> {
   return new Promise((resolve) => {
-    const child = exec(command, { cwd }, () => {
+    const child = execFile(file, args, options ?? {}, () => {
       resolve();
     });
     child.stdout?.on("data", function (data) {

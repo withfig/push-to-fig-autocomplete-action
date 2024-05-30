@@ -1,7 +1,7 @@
 import * as github from "@actions/github";
-import * as path from "path";
-import { Blob, FileOrFolder, Octokit, Repo } from "./types";
-import { readFile, readdir } from "fs/promises";
+import * as path from "node:path";
+import type { Blob, FileOrFolder, Octokit, Repo } from "./types";
+import { readFile, readdir } from "node:fs/promises";
 
 export async function getDefaultBranch(
   octokit: Octokit,

@@ -1,10 +1,10 @@
 import * as core from "@actions/core";
 import * as path from "path";
-import { FileOrFolder, Octokit, OctokitError, Repo } from "./types";
+import type { FileOrFolder, Octokit, OctokitError, Repo } from "./types";
 import { createFileBlob, createFolderBlobs } from "./git-utils";
 import { isFile, mkdirIfNotExists, timeout } from "./utils";
 import { listForks } from "./graphql-queries";
-import { writeFile } from "fs/promises";
+import { writeFile, stat } from "fs/promises";
 
 export class AutocompleteRepoManagerError extends Error {}
 
@@ -40,7 +40,7 @@ export class AutocompleteRepoManager {
   async createCommitOnForkNewBranch(
     fork: Repo,
     branchName: string,
-    localSpecFileOrFolder: FileOrFolder,
+    localSpecFileOrFolder: FileOrFolder[],
   ): Promise<boolean> {
     core.startGroup("commit");
     // create new branch on top of the upstream master
@@ -65,9 +65,22 @@ export class AutocompleteRepoManager {
     core.info(`Created a new branch on the fork: refs/heads/${branchName}`);
 
     // create new blob, new tree, commit everything and update PR branch
-    const blobs = localSpecFileOrFolder.repoPath.endsWith(".ts")
-      ? [await createFileBlob(this.octokit, fork, localSpecFileOrFolder)]
-      : await createFolderBlobs(this.octokit, fork, localSpecFileOrFolder);
+    const blobs = [];
+    for (const fileOrFolder of localSpecFileOrFolder) {
+      const stats = await stat(fileOrFolder.localPath);
+      if (stats.isFile()) {
+        blobs.push(await createFileBlob(this.octokit, fork, fileOrFolder));
+      } else if (stats.isDirectory()) {
+        blobs.push(
+          ...(await createFolderBlobs(this.octokit, fork, fileOrFolder)),
+        );
+      } else {
+        throw new AutocompleteRepoManagerError(
+          `Invalid file or folder: ${fileOrFolder.localPath}`,
+        );
+      }
+    }
+
     const newTree = await this.octokit.rest.git.createTree({
       ...fork,
       tree: blobs,

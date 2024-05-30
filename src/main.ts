@@ -1,15 +1,15 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import * as path from "node:path";
-import { FileOrFolder, Repo } from "./types";
-import { execAsync, mergeSpecs, timeout } from "./utils";
+import type { FileOrFolder, Repo } from "./types";
+import { execFileAsync, mergeSpecs, timeout } from "./utils";
 import { uploadFilepathArtifact, uploadFolderPathArtifact } from "./artifact";
 import { AutocompleteRepoManager } from "./autocomplete-repo-manager";
-import { TMP_FOLDER, TMP_AUTOCOMPLETE_SRC_MOCK } from "./constants";
+import { TMP_AUTOCOMPLETE_SRC_MOCK, TMP_FOLDER } from "./constants";
 import { getDefaultBranch } from "./git-utils";
 import { lintAndFormatSpec } from "./lint-format";
 import { randomUUID } from "node:crypto";
-import { copyFile, mkdir } from "node:fs/promises";
+import { copyFile, mkdir, readdir, cp } from "node:fs/promises";
 import { existsSync } from "node:fs";
 
 async function run(): Promise<void> {
@@ -20,6 +20,7 @@ async function run(): Promise<void> {
     });
     // The local path of the new spec relative to the repo root e.g. `fig_cli/generated-fig.ts`
     const newSpecPathInRepo = core.getInput("spec-path", { required: true });
+    const newSpecFolderPathInRepo = core.getInput("spec-folder-path");
     const repoOrg = core.getInput("repo-org");
     const repoName = core.getInput("repo-name");
     const diffBasedVersioning =
@@ -53,7 +54,7 @@ async function run(): Promise<void> {
       `${randomUUID()}.ts`,
     );
     // this is the local path of the updated spec: it will be either a TS file for old-style specs or a folder for diff-versioned.
-    let localSpecFileOrFolder: FileOrFolder;
+    const localSpecFileOrFolder: FileOrFolder[] = [];
     // Run eslint and prettier on top of the generated spec and report eventual errors
     await copyFile(path.resolve(newSpecPathInRepo), newSpecPath);
     await lintAndFormatSpec(newSpecPath, TMP_FOLDER);
@@ -67,23 +68,86 @@ async function run(): Promise<void> {
           `src/${autocompleteSpecName}.ts`,
           oldSpecPath,
         );
-      await uploadFilepathArtifact(`old-spec-${randomUUID()}.ts`, oldSpecPath);
 
       const mergedSpecPath = path.join(
         TMP_AUTOCOMPLETE_SRC_MOCK,
         "merged-spec.ts",
       );
+
       if (successfullyClonedSpecFile) {
+        await uploadFilepathArtifact(
+          `old-spec-${randomUUID()}.ts`,
+          oldSpecPath,
+        );
         await mergeSpecs(oldSpecPath, newSpecPath, mergedSpecPath, TMP_FOLDER);
         await uploadFilepathArtifact(
           `merged-spec-${randomUUID()}.ts`,
           mergedSpecPath,
         );
       }
-      localSpecFileOrFolder = {
+
+      localSpecFileOrFolder.push({
         localPath: successfullyClonedSpecFile ? mergedSpecPath : newSpecPath,
         repoPath: `src/${autocompleteSpecName}.ts`,
-      };
+      });
+
+      if (newSpecFolderPathInRepo) {
+        const newSpecFolderPath = path.join(
+          TMP_AUTOCOMPLETE_SRC_MOCK,
+          `${autocompleteSpecName}-${randomUUID()}`,
+        );
+
+        await cp(path.resolve(newSpecFolderPathInRepo), newSpecFolderPath, {
+          recursive: true,
+        });
+
+        const localSpecFolder = path.join(
+          TMP_AUTOCOMPLETE_SRC_MOCK,
+          autocompleteSpecName,
+        );
+
+        const successfullyClonedSpecFolder =
+          await autocompleteRepoManager.cloneSpecFolder(
+            `src/${autocompleteSpecName}`,
+            localSpecFolder,
+          );
+
+        if (successfullyClonedSpecFolder) {
+          await uploadFolderPathArtifact(
+            `old-spec-folder-${randomUUID()}`,
+            localSpecFolder,
+          );
+
+          for (const file of await readdir(newSpecFolderPath)) {
+            if (existsSync(path.join(newSpecFolderPath, file))) {
+              await mergeSpecs(
+                path.join(localSpecFolder, file),
+                path.join(newSpecFolderPath, file),
+                path.join(newSpecFolderPath, file),
+                TMP_FOLDER,
+              );
+            } else {
+              await lintAndFormatSpec(
+                path.join(newSpecFolderPath, file),
+                TMP_FOLDER,
+              );
+            }
+          }
+        } else {
+          for (const file of await readdir(newSpecFolderPath)) {
+            lintAndFormatSpec(path.join(newSpecFolderPath, file), TMP_FOLDER);
+          }
+          await uploadFolderPathArtifact(
+            `new-spec-folder-${randomUUID()}`,
+            newSpecFolderPath,
+          );
+        }
+
+        localSpecFileOrFolder.push({
+          repoPath: `src/${autocompleteSpecName}`,
+          localPath: newSpecFolderPath,
+        });
+      }
     } else {
       const newSpecVersion = core.getInput("new-spec-version");
       const useMinorBase = core.getBooleanInput("use-minor-base");
@@ -110,22 +174,34 @@ async function run(): Promise<void> {
         );
       } else {
         // spec-folder does not exist in autocomplete repo so we create a new one locally and then upload to the autocomplete repo
-        await execAsync(
-          `npx @withfig/autocomplete-tools@2 version init-spec ${autocompleteSpecName} --cwd ${TMP_AUTOCOMPLETE_SRC_MOCK}`,
-        );
+        await execFileAsync("npx", [
+          "@withfig/autocomplete-tools@2",
+          "version",
+          "init-spec",
+          autocompleteSpecName,
+          "--cwd",
+          TMP_AUTOCOMPLETE_SRC_MOCK,
+        ]);
       }
-      await execAsync(
-        `npx @withfig/autocomplete-tools@2 version add-diff ${
-          useMinorBase ? "--use-minor-base" : ""
-        } ${autocompleteSpecName} ${newSpecPath} ${newSpecVersion} --cwd ${TMP_AUTOCOMPLETE_SRC_MOCK}`,
-      );
+
+      await execFileAsync("npx", [
+        "@withfig/autocomplete-tools@2",
+        "version",
+        "add-diff",
+        ...(useMinorBase ? ["--use-minor-base"] : []),
+        autocompleteSpecName,
+        newSpecPath,
+        newSpecVersion,
+        "--cwd",
+        TMP_AUTOCOMPLETE_SRC_MOCK,
+      ]);
 
       await lintAndFormatSpec(localSpecFolder, TMP_FOLDER);
 
-      localSpecFileOrFolder = {
+      localSpecFileOrFolder.push({
         repoPath: `src/${autocompleteSpecName}`,
         localPath: localSpecFolder,
-      };
+      });
     }
 
     // create autocomplete fork
