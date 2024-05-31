@@ -20,9 +20,11 @@ export async function mergeSpecs(
   core.info("Started running merge tool...");
   const oldSpecContent = await readFile(oldSpecFilepath, { encoding: "utf8" });
   const newSpecContent = await readFile(newSpecFilepath, { encoding: "utf8" });
-  const mergedSpecContent = merge(oldSpecContent, newSpecContent, {
+  const mergedSpecContent = await merge(oldSpecContent, newSpecContent, {
     ...(integration && { preset: integration }),
     prettifyOutput: false,
+    oldFileName: oldSpecFilepath,
+    newFileName: newSpecFilepath,
   });
   await writeFile(mergedSpecFilepath, mergedSpecContent, { encoding: "utf8" });
   if (!skipLintAndFormat) {
