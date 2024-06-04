@@ -40,8 +40,8 @@ importers:
         specifier: ^8.57.0
         version: 8.57.0
       eslint-plugin-github:
-        specifier: 5.0.0-2
-        version: 5.0.0-2(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5)
+        specifier: 5.0.0
+        version: 5.0.0(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5)
       husky:
         specifier: ^9.0.11
         version: 9.0.11
@@ -701,9 +701,6 @@ packages:
   '@types/node-fetch@2.6.11':
     resolution: {integrity: sha512-24xFj9R5+rfQJLRyM56qh+wnVSYhyXC2tkoBndtY0U+vubqNsYXGjufB2nn8Q6gt0LrARwL6UBtMCSVCwl4B1g==}
 
-  '@types/node@20.12.13':
-    resolution: {integrity: sha512-gBGeanV41c1L171rR7wjbMiEpEI/l5XFQdLLfhr/REwpgDy/4U8y89+i8kRiLzDyZdOkXh+cRaTetUnCYutoXA==}
-
   '@types/node@20.14.0':
     resolution: {integrity: sha512-5cHBxFGJx6L4s56Bubp4fglrEpmyJypsqI6RgzMfBHWUJQGWAAi8cWcgetEbZXHYXo9C2Fa4EEds/uSyS4cxmA==}
 
@@ -1286,8 +1283,8 @@ packages:
     peerDependencies:
       eslint: '*'
 
-  eslint-plugin-github@5.0.0-2:
-    resolution: {integrity: sha512-oQUFAF1wMBvRMGLvGWxVhZ46JNjKbPuuDufmUDZ3ZYyovWHCqqR5HLHTpTfmZQcyEXmjv9TWdsgfdMlod2fGMQ==}
+  eslint-plugin-github@5.0.0:
+    resolution: {integrity: sha512-11xKeGGdY42z1e6ZcsNXasjY9Gei4u2Em5Sl/iWPqVzrqYfb/93vvikhp5zS+OBZp+yoH1IPGpevIKxBIbMfEw==}
     hasBin: true
     peerDependencies:
       eslint: ^8.0.1
@@ -3165,10 +3162,6 @@ snapshots:
       '@types/node': 20.14.0
       form-data: 4.0.0
 
-  '@types/node@20.12.13':
-    dependencies:
-      undici-types: 5.26.5
-
   '@types/node@20.14.0':
     dependencies:
       undici-types: 5.26.5
@@ -3917,7 +3910,7 @@ snapshots:
       lodash.snakecase: 4.1.1
       lodash.upperfirst: 4.3.1
 
-  eslint-plugin-github@5.0.0-2(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5):
+  eslint-plugin-github@5.0.0(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5):
     dependencies:
       '@github/browserslist-config': 1.0.0
       '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
@@ -4419,7 +4412,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 20.12.13
+      '@types/node': 20.14.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
