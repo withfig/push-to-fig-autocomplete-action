@@ -40,8 +40,8 @@ importers:
         specifier: ^8.57.0
         version: 8.57.0
       eslint-plugin-github:
-        specifier: 5.0.0-2
-        version: 5.0.0-2(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5)
+        specifier: 5.0.1
+        version: 5.0.1(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5)
       husky:
         specifier: ^9.0.11
         version: 9.0.11
@@ -1286,8 +1286,8 @@ packages:
     peerDependencies:
       eslint: '*'
 
-  eslint-plugin-github@5.0.0-2:
-    resolution: {integrity: sha512-oQUFAF1wMBvRMGLvGWxVhZ46JNjKbPuuDufmUDZ3ZYyovWHCqqR5HLHTpTfmZQcyEXmjv9TWdsgfdMlod2fGMQ==}
+  eslint-plugin-github@5.0.1:
+    resolution: {integrity: sha512-qbXG3wL5Uh2JB92EKeX2hPtO9c/t75qVxQjVLYuTFfhHifLZzv9CBvLCvoaBhLrAC/xTMVht7DK/NofYK8X4Dg==}
     hasBin: true
     peerDependencies:
       eslint: ^8.0.1
@@ -3917,7 +3917,7 @@ snapshots:
       lodash.snakecase: 4.1.1
       lodash.upperfirst: 4.3.1
 
-  eslint-plugin-github@5.0.0-2(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5):
+  eslint-plugin-github@5.0.1(@types/eslint@8.56.10)(eslint@8.57.0)(typescript@5.4.5):
     dependencies:
       '@github/browserslist-config': 1.0.0
       '@typescript-eslint/eslint-plugin': 7.11.0(@typescript-eslint/parser@7.11.0(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)(typescript@5.4.5)
