@@ -1,15 +1,16 @@
 {
   "name": "push-to-fig-autocomplete-action",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "description": "Action to automatically open a new PR to the withfig/autocomplete repo",
+  "type": "module",
   "main": "lib/main.js",
   "packageManager": "pnpm@9.1.4",
   "scripts": {
     "format": "prettier --write '**/*.ts'",
     "format-check": "prettier --check '**/*.ts'",
     "lint": "eslint src/**/*.ts",
-    "package": "esbuild --bundle src/main.ts --outfile=dist/index.js --minify --keep-names --sourcemap --platform=node",
+    "package": "tsc && rm -rf dist && mkdir dist && node esbuild.js",
     "test": "vitest --run --passWithNoTests",
     "all": "npm run format && npm run lint && npm run package && npm test",
     "prepare": "husky install"
@@ -32,10 +33,10 @@
   "author": "Grant Gurvis <grangurv@amazon.com>",
   "license": "MIT",
   "dependencies": {
-    "@actions/artifact": "^2.1.4",
+    "@actions/artifact": "^2.1.7",
     "@actions/core": "^1.10.1",
     "@actions/github": "^6.0.0",
-    "@fig/autocomplete-merge": "^1.3.0"
+    "@fig/autocomplete-merge": "^1.4.0"
   },
   "devDependencies": {
     "@types/eslint": "^8.56.5",
@@ -49,7 +50,7 @@
     "js-yaml": "^4.1.0",
     "prettier": "^3.3.0",
     "ts-loader": "^9.5.1",
-    "typescript": "^5.3.3",
+    "typescript": "^5.4.5",
     "vitest": "^1.6.0"
   }
 }

@@ -35,4 +35,4 @@ inputs:
     default: "autocomplete"
 runs:
   using: "node20"
-  main: "dist/index.js"
+  main: "dist/main.js"

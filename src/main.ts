@@ -122,9 +122,9 @@ async function run(): Promise<void> {
             if (existsSync(path.join(localSpecFolder, file))) {
               core.startGroup(`Merging ${file}`);
               await mergeSpecs(
-                path.join(localSpecFolder, file),
-                path.join(newSpecFolderPath, file),
-                path.join(newSpecFolderPath, file),
+                path.resolve(path.join(localSpecFolder, file)),
+                path.resolve(path.join(newSpecFolderPath, file)),
+                path.resolve(path.join(newSpecFolderPath, file)),
                 TMP_FOLDER,
                 {
                   skipLintAndFormat: true,
